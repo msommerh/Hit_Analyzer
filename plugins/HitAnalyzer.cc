@@ -88,6 +88,40 @@ private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
+  std::vector<double> ClusterMatcher(const TLorentzVector &jvector, 
+  const std::vector<int> &n_clusters,
+  const std::vector<std::vector<double>>  &cluster_x,
+  const std::vector<std::vector<double>>  &cluster_y,
+  const std::vector<std::vector<double>>  &cluster_z,
+  const std::vector< int> &Unit_layer,
+  const std::vector<double> &pv,
+  std::vector<int> &_nClusters_L1004, 
+  std::vector<int> &_nClusters_L1006,
+  std::vector<int> &_nClusters_L1008,
+  std::vector<int> &_nClusters_L1010,
+  std::vector<int> &_nClusters_L1016,
+  std::vector<int> &_nClusters_L2004,
+  std::vector<int> &_nClusters_L2006,
+  std::vector<int> &_nClusters_L2008,
+  std::vector<int> &_nClusters_L2010,
+  std::vector<int> &_nClusters_L2016,
+  std::vector<int> &_nClusters_L3004,
+  std::vector<int> &_nClusters_L3006,
+  std::vector<int> &_nClusters_L3008,
+  std::vector<int> &_nClusters_L3010,
+  std::vector<int> &_nClusters_L3016,
+  std::vector<int> &_nClusters_L4004,
+  std::vector<int> &_nClusters_L4006,
+  std::vector<int> &_nClusters_L4008,
+  std::vector<int> &_nClusters_L4010,
+  std::vector<int> &_nClusters_L4016
+
+  );//definitely need some more input parameters
+  double GetPhi(const double X, const double Y);
+  double GetTheta(const double X, const double Y, const double Z);
+  double dR_theta_phi(const double &theta1, const double &theta2, const double &phi1, const double &phi2);
+  void AddMatchedClusters(double DR, int &nC004, int &nC006, int &nC008, int &nC010, int &nC016);
+
   void reset( void );
   const reco::GenParticle* findMother(const reco::GenParticle *particle);
       
@@ -120,41 +154,7 @@ private:
 
   // ----------member data ---------------------------
   
-  int trigger_HLT_L1SingleMu22_v1;
-  int trigger_HLT_L1DoubleMu_15_5_SQ_v1;
-  int trigger_HLT_L1TripleMu_5_3_3_SQ_v1;
-  int trigger_HLT_L1SingleEG28er2p1_v1;
-  int trigger_HLT_L1SingleEG50_v1;
-  int trigger_HLT_L1DoubleEG_25_12_er2p5_v1;
-  int trigger_HLT_L1SingleTau120er2p1_v1;
-  int trigger_HLT_L1DoubleIsoTau32er2p1_v1;
-  int trigger_HLT_L1SingleJet180_v1;
-  int trigger_HLT_L1DoubleJet150er2p5_v1;
-  int trigger_HLT_L1HTT450er_v1;
-  int trigger_HLT_L1ETMHF150_v1;
-  int trigger_HLT_EcalCalibration_v4;
-  int trigger_HLT_HcalCalibration_v5;
-  int trigger_HLT_Random_v3;
-  int trigger_HLT_ZeroBias_v6;
-  int trigger_HLT_Physics_v8;
-  int trigger_HLT_ZeroBiasIndiv_v1;
-  int trigger_HLT_ZeroBiasTrains_part0_v1;
-  int trigger_HLT_ZeroBiasTrains_part1_v1;
-  int trigger_HLT_ZeroBiasTrains_part2_v1;
-  int trigger_HLT_ZeroBiasTrains_part3_v1;
-  int trigger_HLT_ZeroBiasTrains_part4_v1;
-  int trigger_HLT_ZeroBiasTrains_part5_v1;
-  int trigger_HLT_ZeroBiasTrains_part6_v1;
-  int trigger_HLT_ZeroBiasTrains_part7_v1;
-  int trigger_HLT_ZeroBiasTrains_part8_v1;
-  int trigger_HLT_PhysicsIndiv_v1;
-  int trigger_HLT_PhysicsTrains_part0_v1;
-  int trigger_HLT_PhysicsTrains_part1_v1;
-  int trigger_HLT_PhysicsTrains_part2_v1;
-  int trigger_AlCa_LumiPixels_Random_v4;
-  int trigger_AlCa_LumiPixels_ZeroBias_v8;
-  int trigger_DST_Physics_v7;
-  
+    
   int                  nJets;
   std::vector<double>  jet_pt;
   std::vector<double>  jet_eta;
@@ -162,18 +162,32 @@ private:
   std::vector<double>  jet_mass;
   std::vector<int>     jet_pdgId;
   std::vector<double>  jet_bTag;
-  // std::vector<double>  jet_vx_x   ;
-  // std::vector<double>  jet_vx_y   ;
-  // std::vector<double>  jet_vx_z   ;
-  // std::vector<double>  jet_vx_eta ;
-  // std::vector<double>  jet_vx_phi ;
-  // std::vector<double>  jet_vx_r   ;
+
+  std::vector<int>     nClusters_L1004;
+  std::vector<int>     nClusters_L1006;
+  std::vector<int>     nClusters_L1008;
+  std::vector<int>     nClusters_L1010;
+  std::vector<int>     nClusters_L1016;
+  std::vector<int>     nClusters_L2004;
+  std::vector<int>     nClusters_L2006;
+  std::vector<int>     nClusters_L2008;
+  std::vector<int>     nClusters_L2010;
+  std::vector<int>     nClusters_L2016;
+  std::vector<int>     nClusters_L3004;
+  std::vector<int>     nClusters_L3006;
+  std::vector<int>     nClusters_L3008;
+  std::vector<int>     nClusters_L3010;
+  std::vector<int>     nClusters_L3016;
+  std::vector<int>     nClusters_L4004;
+  std::vector<int>     nClusters_L4006;
+  std::vector<int>     nClusters_L4008;
+  std::vector<int>     nClusters_L4010;
+  std::vector<int>     nClusters_L4016;
+
   std::vector<double>  PV_x;
   std::vector<double>  PV_y;
   std::vector<double>  PV_z; 
   
-  std::vector<double>  dr_jetGen;
-       
   int                  nGenParticles;
   std::vector<double>  genParticle_pt;
   std::vector<double>  genParticle_eta;
@@ -195,56 +209,16 @@ private:
   std::vector<double>  genParticle_decayvx_phi ;
   std::vector<double>  genParticle_decayvx_r   ;
   
-
-  int                  nTracks;
-  std::vector<double>  track_pt;
-  std::vector<double>  track_eta;
-  std::vector<double>  track_phi;
-  //std::vector<double>  track_mass;
-  std::vector<double>  track_charge   ;
-  std::vector<double>  track_px   ;
-  std::vector<double>  track_py   ;
-  std::vector<double>  track_pz ;
-  std::vector<double>  track_vx_x   ;
-  std::vector<double>  track_vx_y   ;
-  std::vector<double>  track_vx_z   ;
-  //std::vector<double>  track_vx_eta ;
-  std::vector<double>  track_vx_phi ;
-  std::vector<double>  track_vx_r   ;
-  
-  
-       
   int                          nDetUnits;
-  // std::vector<unsigned int>    detUnit_detType;
   std::vector<unsigned int>    detUnit_subdetId;
-       
-  // barrel ids
-  // std::vector< unsigned int>  detUnit_layerC;
- //  std::vector< unsigned int>  detUnit_ladderC;
- //  std::vector< unsigned int>  detUnit_zindex;
- //  std::vector< int>           detUnit_shell ; // shell id // Shell { mO = 1, mI = 2 , pO =3 , pI =4 };
- //  std::vector< int>           detUnit_sector; // 1-8
-  // std::vector< int>           detUnit_ladder; // 1-22
   std::vector< int>           detUnit_layer ; // 1-3
-  // std::vector< int>           detUnit_module; // 1-4
-  // std::vector< bool>          detUnit_half ;
-
-  // Endcap ids
   std::vector<unsigned int>   detUnit_disk;   //1,2,3
-  // std::vector<unsigned int>   detUnit_blade;  //1-24
-  // std::vector<unsigned int>   detUnit_moduleF; // plaquette 1,2,3,4
   std::vector<unsigned int>   detUnit_side;   //size=1 for -z, 2 for +z
-  // std::vector<unsigned int>   detUnit_panel;  //panel=1
-  
-   std::vector< double >           detUnit_X     ;
-   std::vector< double >           detUnit_Y     ;
-   std::vector< double >           detUnit_Z     ;
-   std::vector< double >           detUnit_R     ;
-   std::vector< double >           detUnit_Phi   ;
-   
-   
-   
-   
+  std::vector< double >           detUnit_X     ;
+  std::vector< double >           detUnit_Y     ;
+  std::vector< double >           detUnit_Z     ;
+  std::vector< double >           detUnit_R     ;
+  std::vector< double >           detUnit_Phi   ;
        
   std::vector<int>                  nClusters;
   std::vector<std::vector<double>>  cluster_sizex;
@@ -278,72 +252,45 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   printLocal = conf.getUntrackedParameter<bool>("Verbosity",false);
   phase1_ = conf.getUntrackedParameter<bool>("phase1",false);
   isMC_ = conf.getUntrackedParameter<bool>("isMC",false);
-
         
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>( "tree", "tree" );
 
-
-  tree->Branch("trigger_HLT_L1SingleMu22_v1"		, &trigger_HLT_L1SingleMu22_v1		);
-  tree->Branch("trigger_HLT_L1DoubleMu_15_5_SQ_v1"	, &trigger_HLT_L1DoubleMu_15_5_SQ_v1	);
-  tree->Branch("trigger_HLT_L1TripleMu_5_3_3_SQ_v1"	, &trigger_HLT_L1TripleMu_5_3_3_SQ_v1	);
-  tree->Branch("trigger_HLT_L1SingleEG28er2p1_v1"	, &trigger_HLT_L1SingleEG28er2p1_v1	);
-  tree->Branch("trigger_HLT_L1SingleEG50_v1"		, &trigger_HLT_L1SingleEG50_v1		);
-  tree->Branch("trigger_HLT_L1DoubleEG_25_12_er2p5_v1"	, &trigger_HLT_L1DoubleEG_25_12_er2p5_v1);
-  tree->Branch("trigger_HLT_L1SingleTau120er2p1_v1"	, &trigger_HLT_L1SingleTau120er2p1_v1	);
-  tree->Branch("trigger_HLT_L1DoubleIsoTau32er2p1_v1"	, &trigger_HLT_L1DoubleIsoTau32er2p1_v1	);
-  tree->Branch("trigger_HLT_L1SingleJet180_v1"		, &trigger_HLT_L1SingleJet180_v1	);
-  tree->Branch("trigger_HLT_L1DoubleJet150er2p5_v1"	, &trigger_HLT_L1DoubleJet150er2p5_v1	);
-  tree->Branch("trigger_HLT_L1HTT450er_v1"		, &trigger_HLT_L1HTT450er_v1		);
-  tree->Branch("trigger_HLT_L1ETMHF150_v1"		, &trigger_HLT_L1ETMHF150_v1		);
-  tree->Branch("trigger_HLT_EcalCalibration_v4"		, &trigger_HLT_EcalCalibration_v4	);
-  tree->Branch("trigger_HLT_HcalCalibration_v5"		, &trigger_HLT_HcalCalibration_v5	);
-  tree->Branch("trigger_HLT_Random_v3"			, &trigger_HLT_Random_v3		);
-  tree->Branch("trigger_HLT_ZeroBias_v6"		, &trigger_HLT_ZeroBias_v6		);
-  tree->Branch("trigger_HLT_Physics_v8"			, &trigger_HLT_Physics_v8		);
-  tree->Branch("trigger_HLT_ZeroBiasIndiv_v1"		, &trigger_HLT_ZeroBiasIndiv_v1		);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part0_v1"	, &trigger_HLT_ZeroBiasTrains_part0_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part1_v1"	, &trigger_HLT_ZeroBiasTrains_part1_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part2_v1"	, &trigger_HLT_ZeroBiasTrains_part2_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part3_v1"	, &trigger_HLT_ZeroBiasTrains_part3_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part4_v1"	, &trigger_HLT_ZeroBiasTrains_part4_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part5_v1"	, &trigger_HLT_ZeroBiasTrains_part5_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part6_v1"	, &trigger_HLT_ZeroBiasTrains_part6_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part7_v1"	, &trigger_HLT_ZeroBiasTrains_part7_v1	);
-  tree->Branch("trigger_HLT_ZeroBiasTrains_part8_v1"	, &trigger_HLT_ZeroBiasTrains_part8_v1	);
-  tree->Branch("trigger_HLT_PhysicsIndiv_v1"		, &trigger_HLT_PhysicsIndiv_v1		);
-  tree->Branch("trigger_HLT_PhysicsTrains_part0_v1"	, &trigger_HLT_PhysicsTrains_part0_v1	);
-  tree->Branch("trigger_HLT_PhysicsTrains_part1_v1"	, &trigger_HLT_PhysicsTrains_part1_v1	);
-  tree->Branch("trigger_HLT_PhysicsTrains_part2_v1"	, &trigger_HLT_PhysicsTrains_part2_v1	);
-  tree->Branch("trigger_AlCa_LumiPixels_Random_v4"	, &trigger_AlCa_LumiPixels_Random_v4	);
-  tree->Branch("trigger_AlCa_LumiPixels_ZeroBias_v8"	, &trigger_AlCa_LumiPixels_ZeroBias_v8	);
-  tree->Branch("trigger_DST_Physics_v7"			, &trigger_DST_Physics_v7		);
-
-
-  
   tree->Branch( "nJets"             , &nJets );
   tree->Branch( "jet_pt"            , &jet_pt );
   tree->Branch( "jet_eta"           , &jet_eta );
   tree->Branch( "jet_phi"           , &jet_phi );
   tree->Branch( "jet_mass"          , &jet_mass );
-  // tree->Branch( "jet_pdgId"         , &jet_pdgId );
   tree->Branch( "jet_bTag"          , &jet_bTag );
-  // tree->Branch( "jet_vx_x"  , &jet_vx_x   );
-  // tree->Branch( "jet_vx_y"  , &jet_vx_y   );
-  // tree->Branch( "jet_vx_z"  , &jet_vx_z   );
-  // tree->Branch( "jet_vx_eta", &jet_vx_eta );
-  // tree->Branch( "jet_vx_phi", &jet_vx_phi );
-  // tree->Branch( "jet_vx_r"  , &jet_vx_r   );
+ 
+  tree->Branch( "nClusters_L1004", &nClusters_L1004 ); 
+  tree->Branch( "nClusters_L1006", &nClusters_L1006 );
+  tree->Branch( "nClusters_L1008", &nClusters_L1008 );
+  tree->Branch( "nClusters_L1010", &nClusters_L1010 );
+  tree->Branch( "nClusters_L1016", &nClusters_L1016 );
+  tree->Branch( "nClusters_L2004", &nClusters_L2004 );
+  tree->Branch( "nClusters_L2006", &nClusters_L2006 );
+  tree->Branch( "nClusters_L2008", &nClusters_L2008 );
+  tree->Branch( "nClusters_L2010", &nClusters_L2010 );
+  tree->Branch( "nClusters_L2016", &nClusters_L2016 );
+  tree->Branch( "nClusters_L3004", &nClusters_L3004 );
+  tree->Branch( "nClusters_L3006", &nClusters_L3006 );
+  tree->Branch( "nClusters_L3008", &nClusters_L3008 );
+  tree->Branch( "nClusters_L3010", &nClusters_L3010 );
+  tree->Branch( "nClusters_L3016", &nClusters_L3016 );
+  tree->Branch( "nClusters_L4004", &nClusters_L4004 );
+  tree->Branch( "nClusters_L4006", &nClusters_L4006 );
+  tree->Branch( "nClusters_L4008", &nClusters_L4008 );
+  tree->Branch( "nClusters_L4010", &nClusters_L4010 );
+  tree->Branch( "nClusters_L4016", &nClusters_L4016 );
+  
   tree->Branch("PV_x", &PV_x);
   tree->Branch("PV_y", &PV_y);
   tree->Branch("PV_z", &PV_z); 
 
 
   if (isMC_) {
-  
-    // tree->Branch( "dr_jetGen"         , &dr_jetGen );
-    
     tree->Branch( "nGenParticles"     , &nGenParticles );
     tree->Branch( "genParticle_pt"    , &genParticle_pt );
     tree->Branch( "genParticle_eta"   , &genParticle_eta );
@@ -365,68 +312,6 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
     tree->Branch( "genParticle_decayvx_phi" , &genParticle_decayvx_phi );
     tree->Branch( "genParticle_decayvx_r"   , &genParticle_decayvx_r   );
   }
-
-  tree->Branch( "nTracks"      , &nTracks );
-  tree->Branch( "track_pt"     , &track_pt );
-  tree->Branch( "track_eta"    , &track_eta );
-  tree->Branch( "track_phi"    , &track_phi );
-  //tree->Branch( "track_mass"   , &track_mass );
-  tree->Branch( "track_charge" , &track_charge)   ;
-  tree->Branch( "track_px"     , &track_px)   ;
-  tree->Branch( "track_py"     , &track_py)   ;
-  tree->Branch( "track_pz"     , &track_pz) ;
-  tree->Branch( "track_vx_x"   , &track_vx_x   );
-  tree->Branch( "track_vx_y"   , &track_vx_y   );
-  tree->Branch( "track_vx_z"   , &track_vx_z   );
-  //tree->Branch( "track_vx_eta" , &track_vx_eta );
-  tree->Branch( "track_vx_phi" , &track_vx_phi );
-  tree->Branch( "track_vx_r"   , &track_vx_r   );
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  tree->Branch( "nDetUnits"         ,&nDetUnits           );
-  // tree->Branch( "detUnit_detType"   ,&detUnit_detType     );
-  tree->Branch( "detUnit_subdetId"  ,&detUnit_subdetId    );
-  // tree->Branch( "detUnit_layerC"    ,&detUnit_layerC      );
-  // tree->Branch( "detUnit_ladderC"   ,&detUnit_ladderC     );
-  // tree->Branch( "detUnit_zindex"    ,&detUnit_zindex      );
-  // tree->Branch( "detUnit_shell"     ,&detUnit_shell       );
-  // tree->Branch( "detUnit_sector"    ,&detUnit_sector      );
-  // tree->Branch( "detUnit_ladder"    ,&detUnit_ladder      );
-  tree->Branch( "detUnit_layer"     ,&detUnit_layer       ); 
-  // tree->Branch( "detUnit_module"    ,&detUnit_module      );
-  // tree->Branch( "detUnit_half"      ,&detUnit_half        );
-  tree->Branch( "detUnit_disk"      ,&detUnit_disk        );   
-  // tree->Branch( "detUnit_blade"     ,&detUnit_blade       );
-  // tree->Branch( "detUnit_moduleF"   ,&detUnit_moduleF     );
-  tree->Branch( "detUnit_side"      ,&detUnit_side        );
-  // tree->Branch( "detUnit_panel"     ,&detUnit_panel       );
-  
-  tree->Branch( "detUnit_X"   ,&detUnit_X                   );
-  tree->Branch( "detUnit_Y"   ,&detUnit_Y                   );
-  tree->Branch( "detUnit_Z"   ,&detUnit_Z                   );
-  tree->Branch( "detUnit_R"   ,&detUnit_R                   );
-  tree->Branch( "detUnit_Phi" ,&detUnit_Phi                 );
-  
-  
-  
-  tree->Branch( "nClusters"         ,&nClusters           );
-  tree->Branch( "cluster_sizex"     ,&cluster_sizex           );
-  tree->Branch( "cluster_sizey"     ,&cluster_sizey           );
-  tree->Branch( "cluster_globalz"   ,&cluster_globalz     );
-  tree->Branch( "cluster_globalx"   ,&cluster_globalx     );
-  tree->Branch( "cluster_globaly"   ,&cluster_globaly     );
-  tree->Branch( "cluster_globalPhi" ,&cluster_globalPhi   );
-  tree->Branch( "cluster_globalR"   ,&cluster_globalR     );
-  tree->Branch( "cluster_charge"    ,&cluster_charge	  );
-  
-    
    
   std::string labelgenP("genParticles");
   std::string labelAK8s("ak8PFJetsCHS");
@@ -437,9 +322,7 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   std::string labelTracks("generalTracks");
   std::string labelCSV("pfCombinedSecondaryVertexV2BJetTags");
   std::string labelHLTtriggers("TriggerResults");	
-  //std::string label1("TriggerResults");
-  //std::string label2("");
-  //std::string label3("HLT");
+
   genPtoken      = consumes<reco::GenParticleCollection         > (edm::InputTag(labelgenP));
   ak8CHStoken    = consumes<reco::PFJetCollection               > (edm::InputTag(labelAK8s));
   ak4CHStoken    = consumes<reco::PFJetCollection               > (edm::InputTag(labelAK4s));
@@ -449,8 +332,6 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   csv2Token      = consumes<reco::JetTagCollection              > (edm::InputTag(labelCSV));
   trackToken     = consumes<reco::TrackCollection               > (edm::InputTag(labelTracks));
   HLTtriggersToken=consumes<edm::TriggerResults	    		> (HLTtriggers_);
-  //HLTtriggersToken=consumes<edm::TriggerResults	    		> (edm::InputTag(labelHLTtriggers, "", "HLT"));
-  //HLTtriggersToken=consumes<edm::TriggerResults			> (edm::InputTag(label1, label2, label3));
 
 }
 
@@ -489,7 +370,6 @@ void
   iSetup.get<TrackerTopologyRcd>().get(tTopoH);
   const TrackerTopology *tTopo=tTopoH.product();
 #endif
-  
    
   // Get handles
   Handle<edmNew::DetSetVector<SiPixelCluster> > clusters ; iEvent.getByToken( clusterToken , clusters );
@@ -503,117 +383,12 @@ void
   Handle<edm::TriggerResults		      > HLTtriggers; iEvent.getByToken(HLTtriggersToken, HLTtriggers);
   const reco::JetTagCollection & bTags = *(CSVs.product()); 
 
-  /* 
-  std::cout<<"got to point A"<<std::endl;
-  edm::Handle<edm::TriggerResults> trigResults;
-  std::cout<<"got to point B"<<std::endl;
-  edm::InputTag trigResultsTag("TriggerResults", "", "HLT");
-  std::cout<<"got to point C"<<std::endl;
-  iEvent.getByLabel(trigResultsTag, trigResults);
-  std::cout<<"got to point D"<<std::endl;
-  const edm::TriggerNames& trigNames = iEvent.triggerNames(*trigResults);
-  std::cout<<"got to point E"<<std::endl;
-  std::string pathName="HLT_PFHT350_PFMET120_NoiseCleaned_v1";
-  std::cout<<"got to point F"<<std::endl;
-  bool passTrig=trigResults->accept(trigNames.triggerIndex(pathName));
-  std::cout<<"got to point G"<<std::endl;
-  */
-
-  /* 
-  const edm::TriggerNames& trigNames = iEvent.triggerNames(*HLTtriggers);
-  std::cout<<"number of trigger names = "<<HLTtriggers->size()<<std::endl;
-  //for (unsigned int i=0; i<HLTtriggers->size(); ++i) {
-  //  std::cout<<"trigger number "<<i<<": "<<trigNames.triggerName(i)<<std::endl;
-  //}
-  std::string pathName="HLT_L1DoubleJet150er2p5_v1";
-  int passTrig=HLTtriggers->accept(trigNames.triggerIndex(pathName));
-  //if (passTrig){
-  //std::cout<<"the trigger "<<pathName<<" was passed!"<<std::endl;
-  //}
-  //else {
-  //std::cout<<"the trigger "<<pathName<<" was not passed!"<<std::endl;
-  //}
-  */
-
-  const edm::TriggerNames& trigNames = iEvent.triggerNames(*HLTtriggers); 
-  trigger_HLT_L1SingleMu22_v1		= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1SingleMu22_v1"));
-  trigger_HLT_L1DoubleMu_15_5_SQ_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1DoubleMu_15_5_SQ_v1"));
-  trigger_HLT_L1TripleMu_5_3_3_SQ_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1TripleMu_5_3_3_SQ_v1"));
-  trigger_HLT_L1SingleEG28er2p1_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1SingleEG28er2p1_v1"));
-  trigger_HLT_L1SingleEG50_v1		= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1SingleEG50_v1"));
-  trigger_HLT_L1DoubleEG_25_12_er2p5_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1DoubleEG_25_12_er2p5_v1"));
-  trigger_HLT_L1SingleTau120er2p1_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1SingleTau120er2p1_v1"));
-  trigger_HLT_L1DoubleIsoTau32er2p1_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1DoubleIsoTau32er2p1_v1"));
-  trigger_HLT_L1SingleJet180_v1		= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1SingleJet180_v1"));
-  trigger_HLT_L1DoubleJet150er2p5_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1DoubleJet150er2p5_v1"));
-  trigger_HLT_L1HTT450er_v1		= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1HTT450er_v1"));
-  trigger_HLT_L1ETMHF150_v1		= HLTtriggers->accept(trigNames.triggerIndex("HLT_L1ETMHF150_v1"));
-  trigger_HLT_EcalCalibration_v4	= HLTtriggers->accept(trigNames.triggerIndex("HLT_EcalCalibration_v4"));
-  trigger_HLT_HcalCalibration_v5	= HLTtriggers->accept(trigNames.triggerIndex("HLT_HcalCalibration_v5"));
-  trigger_HLT_Random_v3			= HLTtriggers->accept(trigNames.triggerIndex("HLT_Random_v3"));
-  trigger_HLT_ZeroBias_v6		= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBias_v6"));
-  trigger_HLT_Physics_v8		= HLTtriggers->accept(trigNames.triggerIndex("HLT_Physics_v8"));
-  trigger_HLT_ZeroBiasIndiv_v1		= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasIndiv_v1"));
-  trigger_HLT_ZeroBiasTrains_part0_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part0_v1"));
-  trigger_HLT_ZeroBiasTrains_part1_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part1_v1"));
-  trigger_HLT_ZeroBiasTrains_part2_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part2_v1"));
-  trigger_HLT_ZeroBiasTrains_part3_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part3_v1"));
-  trigger_HLT_ZeroBiasTrains_part4_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part4_v1"));
-  trigger_HLT_ZeroBiasTrains_part5_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part5_v1"));
-  trigger_HLT_ZeroBiasTrains_part6_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part6_v1"));
-  trigger_HLT_ZeroBiasTrains_part7_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part7_v1"));
-  trigger_HLT_ZeroBiasTrains_part8_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_ZeroBiasTrains_part8_v1"));
-  trigger_HLT_PhysicsIndiv_v1		= HLTtriggers->accept(trigNames.triggerIndex("HLT_PhysicsIndiv_v1"));
-  trigger_HLT_PhysicsTrains_part0_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_PhysicsTrains_part0_v1"));
-  trigger_HLT_PhysicsTrains_part1_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_PhysicsTrains_part1_v1"));
-  trigger_HLT_PhysicsTrains_part2_v1	= HLTtriggers->accept(trigNames.triggerIndex("HLT_PhysicsTrains_part2_v1"));
-  trigger_AlCa_LumiPixels_Random_v4	= HLTtriggers->accept(trigNames.triggerIndex("AlCa_LumiPixels_Random_v4"));
-  trigger_AlCa_LumiPixels_ZeroBias_v8	= HLTtriggers->accept(trigNames.triggerIndex("AlCa_LumiPixels_ZeroBias_v8"));
-  trigger_DST_Physics_v7		= HLTtriggers->accept(trigNames.triggerIndex("DST_Physics_v7"));
-
-  
   //Loop over PVs
   for (reco::VertexCollection::const_iterator pv=PVs->begin(); pv != PVs->end(); ++pv){
     PV_x.push_back(pv->x());
     PV_y.push_back(pv->y());
     PV_z.push_back(pv->z());
   }
- 
-  // Loop over jets
-  for ( reco::PFJetCollection::const_iterator jet = ak4CHS->begin(); jet != ak4CHS->end(); ++jet ) {
-    //std::cout<<"Jet_pT = "<<jet->pt()<<std::endl;
-    //if (jet->pt()<200.) continue;
-    if (jet->pt()<0.) continue;
-    TLorentzVector TVjet;
-    TVjet.SetPtEtaPhiM(jet->pt(),jet->eta(),jet->phi(),jet->mass());
-    jet_pt.push_back(jet->pt());
-    jet_eta.push_back(jet->eta());
-    jet_phi.push_back(jet->phi());
-    jet_mass.push_back(jet->mass());
-    
-    // b-tag infos
-    double match = 0.4;
-    double csv2 = -99.;
-    for (unsigned int i = 0; i != bTags.size(); ++i) {
-      if (bTags[i].first->pt()<170.) continue;
-      TLorentzVector bTagJet;
-      bTagJet.SetPtEtaPhiM(bTags[i].first->pt(),bTags[i].first->eta(),bTags[i].first->phi(),bTags[i].first->mass());
-      float dR = TVjet.DeltaR(bTagJet);
-      if (dR > match ) continue;
-      match = dR;
-      csv2 = bTags[i].second; 
-    }
-    jet_bTag.push_back(csv2);
-  }
-  nJets         = jet_pt.size();
-  // jet_pdgId.push_back(pdgId);
-  // jet_vx_x   .push_back(jet->vertex().Coordinates().X());
-  // jet_vx_y   .push_back(jet->vertex().Coordinates().Y());
-  // jet_vx_z   .push_back(jet->vertex().Coordinates().Z());
-  // jet_vx_eta .push_back(jet->vertex().Coordinates().Eta());
-  // jet_vx_phi .push_back(jet->vertex().Coordinates().Phi());
-  // jet_vx_r   .push_back(jet->vertex().Coordinates().R());
-    
 
    if (isMC_){ 
     // Loop opver gen particles
@@ -763,27 +538,7 @@ void
 
   nGenParticles = genParticle_pt.size();
   }
-  // Loop over tracks
-  for ( reco::TrackCollection::const_iterator track = tracks->begin(); track != tracks->end(); ++track ) {
-    TLorentzVector TVtrack;
-    // TVtrack.SetPtEtaPhiM(track->pt(),track->eta(),track->phi(),track->mass());
-    track_pt .push_back(track->pt());
-    track_eta.push_back(track->eta());
-    track_phi.push_back(track->phi()); 
-    track_px.push_back(track->px());
-    track_py.push_back(track->py());
-    track_pz.push_back(track->pz());
-    track_vx_x   .push_back(track->vertex().x() );
-    track_vx_y   .push_back(track->vertex().y() );
-    track_vx_z   .push_back(track->vertex().z() );
-    //track_vx_eta .push_back(track->vertex().eta());
-    track_vx_phi .push_back(track->vertex().phi());
-    track_vx_r   .push_back(track->vertex().r() );
-    track_charge .push_back(track->charge());
-    // track_mass.push_back(track->mass());
-  }
-  nTracks = track_pt.size();
-
+  
   // Get vector of detunit ids and loop
   const edmNew::DetSetVector<SiPixelCluster>& input = *clusters;
   
@@ -869,7 +624,6 @@ void
       // if(shell==1 || shell==3) ladder = -ladder; // change ladeer sign for Outer )x<0)
     }
     
-
     
     std::vector<double>  _cluster_sizex;
     std::vector<double>  _cluster_sizey;
@@ -913,22 +667,10 @@ void
     }
     if( numberOfClusters < 1.) continue;
     
-    // detUnit_detType.push_back(detType);
     detUnit_subdetId.push_back(subid);  
-    // detUnit_layerC.push_back( layerC);
-//     detUnit_ladderC.push_back(ladderC);
-//     detUnit_zindex.push_back( zindex);
-//     detUnit_shell .push_back( shell );
-//     detUnit_sector.push_back( sector);
-//     detUnit_ladder.push_back( ladder);
     detUnit_layer .push_back( layer ); 
-    // detUnit_module.push_back( module);
-  //   detUnit_half .push_back( half );
     detUnit_disk.push_back(disk);   
-    // detUnit_blade.push_back(blade);
-//     detUnit_moduleF.push_back(moduleF);
     detUnit_side.push_back(side);   
-    // detUnit_panel.push_back(panel);
     detUnit_X         .push_back(detX     );
     detUnit_Y         .push_back(detY     );
     detUnit_Z         .push_back(detZ     );
@@ -948,47 +690,46 @@ void
     numberOfDetUnits++;
   }
   nDetUnits = numberOfDetUnits;
-  
+ 
+
+  // Loop over jets
+  for ( reco::PFJetCollection::const_iterator jet = ak4CHS->begin(); jet != ak4CHS->end(); ++jet ) {
+    //std::cout<<"Jet_pT = "<<jet->pt()<<std::endl;
+    //if (jet->pt()<200.) continue;
+    if (jet->pt()<100.) continue;
+    TLorentzVector TVjet;
+    TVjet.SetPtEtaPhiM(jet->pt(),jet->eta(),jet->phi(),jet->mass());
+    jet_pt.push_back(jet->pt());
+    jet_eta.push_back(jet->eta());
+    jet_phi.push_back(jet->phi());
+    jet_mass.push_back(jet->mass());
+
+    const std::vector<double> PV{PV_x[0], PV_y[0], PV_z[0]};
+    std::vector<double> Theta_Phi = ClusterMatcher(TVjet, nClusters, cluster_globalx, cluster_globaly, cluster_globalz, detUnit_layer, PV, nClusters_L1004, nClusters_L1006, nClusters_L1008, nClusters_L1010, nClusters_L1016, nClusters_L2004, nClusters_L2006, nClusters_L2008, nClusters_L2010, nClusters_L2016, nClusters_L3004, nClusters_L3006, nClusters_L3008, nClusters_L3010, nClusters_L3016, nClusters_L4004, nClusters_L4006, nClusters_L4008, nClusters_L4010, nClusters_L4016
+
+ );
+    
+    // b-tag infos
+    double match = 0.4;
+    double csv2 = -99.;
+    for (unsigned int i = 0; i != bTags.size(); ++i) {
+      if (bTags[i].first->pt()<170.) continue;
+      TLorentzVector bTagJet;
+      bTagJet.SetPtEtaPhiM(bTags[i].first->pt(),bTags[i].first->eta(),bTags[i].first->phi(),bTags[i].first->mass());
+      float dR = TVjet.DeltaR(bTagJet);
+      if (dR > match ) continue;
+      match = dR;
+      csv2 = bTags[i].second; 
+    }
+    jet_bTag.push_back(csv2);
+  }
+  nJets         = jet_pt.size();
+ 
   tree->Fill();
 }
 
 // Private methods
 void HitAnalyzer::reset( void ){
-
-  trigger_HLT_L1SingleMu22_v1		= 0;  
-  trigger_HLT_L1DoubleMu_15_5_SQ_v1	= 0;
-  trigger_HLT_L1TripleMu_5_3_3_SQ_v1	= 0;
-  trigger_HLT_L1SingleEG28er2p1_v1	= 0;
-  trigger_HLT_L1SingleEG50_v1		= 0;
-  trigger_HLT_L1DoubleEG_25_12_er2p5_v1	= 0;
-  trigger_HLT_L1SingleTau120er2p1_v1	= 0;
-  trigger_HLT_L1DoubleIsoTau32er2p1_v1	= 0;
-  trigger_HLT_L1SingleJet180_v1		= 0;
-  trigger_HLT_L1DoubleJet150er2p5_v1	= 0;
-  trigger_HLT_L1HTT450er_v1		= 0;
-  trigger_HLT_L1ETMHF150_v1		= 0;
-  trigger_HLT_EcalCalibration_v4	= 0;
-  trigger_HLT_HcalCalibration_v5	= 0;
-  trigger_HLT_Random_v3			= 0;
-  trigger_HLT_ZeroBias_v6		= 0;
-  trigger_HLT_Physics_v8		= 0;
-  trigger_HLT_ZeroBiasIndiv_v1		= 0;
-  trigger_HLT_ZeroBiasTrains_part0_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part1_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part2_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part3_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part4_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part5_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part6_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part7_v1	= 0;
-  trigger_HLT_ZeroBiasTrains_part8_v1	= 0;
-  trigger_HLT_PhysicsIndiv_v1		= 0;
-  trigger_HLT_PhysicsTrains_part0_v1	= 0;
-  trigger_HLT_PhysicsTrains_part1_v1	= 0;
-  trigger_HLT_PhysicsTrains_part2_v1	= 0;
-  trigger_AlCa_LumiPixels_Random_v4	= 0;
-  trigger_AlCa_LumiPixels_ZeroBias_v8	= 0;
-  trigger_DST_Physics_v7		= 0;
 
   nJets = 0;
   jet_pt.clear();
@@ -997,17 +738,31 @@ void HitAnalyzer::reset( void ){
   jet_mass.clear();
   jet_pdgId.clear();
   jet_bTag.clear();
-  // jet_vx_x  .clear();
-  // jet_vx_y  .clear();
-  // jet_vx_z  .clear();
-  // jet_vx_eta.clear();
-  // jet_vx_phi.clear();
-  // jet_vx_r  .clear();
+  
+  nClusters_L1004.clear(); 
+  nClusters_L1006.clear();
+  nClusters_L1008.clear();
+  nClusters_L1010.clear();
+  nClusters_L1016.clear();
+  nClusters_L2004.clear();
+  nClusters_L2006.clear();
+  nClusters_L2008.clear();
+  nClusters_L2010.clear();
+  nClusters_L2016.clear();
+  nClusters_L3004.clear();
+  nClusters_L3006.clear();
+  nClusters_L3008.clear();
+  nClusters_L3010.clear();
+  nClusters_L3016.clear();
+  nClusters_L4004.clear();
+  nClusters_L4006.clear();
+  nClusters_L4008.clear();
+  nClusters_L4010.clear();
+  nClusters_L4016.clear();
+
   PV_x.clear();
   PV_y.clear();
   PV_z.clear();
- 
-  dr_jetGen.clear();
   
   nGenParticles = 0;
   genParticle_pt.clear();
@@ -1042,46 +797,16 @@ void HitAnalyzer::reset( void ){
   cluster_charge.clear();
   
   nDetUnits = 0.;
-  // detUnit_detType.clear();
   detUnit_subdetId.clear();
-  // detUnit_layerC.clear();
-  // detUnit_ladderC.clear();
-  // detUnit_zindex.clear();
-  // detUnit_shell .clear();
-  // detUnit_sector.clear();
-  // detUnit_ladder.clear();
   detUnit_layer .clear();
-  // detUnit_module.clear();
-  // detUnit_half .clear();
   detUnit_disk.clear();
-  // detUnit_blade.clear();
-  // detUnit_moduleF.clear();
   detUnit_side.clear();
-  // detUnit_panel.clear();
   detUnit_layer .clear();
   detUnit_X     .clear();
   detUnit_Y     .clear();
   detUnit_Z     .clear();
   detUnit_R     .clear();
   detUnit_Phi   .clear();
-  
-  
-  nTracks = 0.;
-  track_pt     .clear();
-  track_eta    .clear();
-  track_phi    .clear();
-  //track_mass   .clear();
-  track_px     .clear();
-  track_py     .clear();
-  track_pz     .clear();
-  track_charge .clear();
-  track_vx_x   .clear();
-  track_vx_y   .clear();
-  track_vx_z   .clear();
-  //track_vx_eta .clear();
-  track_vx_phi .clear();
-  track_vx_r   .clear();
-  
   
 }
 
@@ -1150,6 +875,152 @@ HitAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
+}
+
+// ------------ method matches clusters to a jet  ------------
+std::vector<double> 
+HitAnalyzer::ClusterMatcher(const TLorentzVector &jvector, 
+  const std::vector<int> &n_clusters,
+  const std::vector<std::vector<double>>  &cluster_x,
+  const std::vector<std::vector<double>>  &cluster_y,
+  const std::vector<std::vector<double>>  &cluster_z,
+  const std::vector<int> &Unit_layer, 
+  const std::vector<double> &pv,
+  std::vector<int> &_nClusters_L1004, 
+  std::vector<int> &_nClusters_L1006,
+  std::vector<int> &_nClusters_L1008,
+  std::vector<int> &_nClusters_L1010,
+  std::vector<int> &_nClusters_L1016,
+  std::vector<int> &_nClusters_L2004,
+  std::vector<int> &_nClusters_L2006,
+  std::vector<int> &_nClusters_L2008,
+  std::vector<int> &_nClusters_L2010,
+  std::vector<int> &_nClusters_L2016,
+  std::vector<int> &_nClusters_L3004,
+  std::vector<int> &_nClusters_L3006,
+  std::vector<int> &_nClusters_L3008,
+  std::vector<int> &_nClusters_L3010,
+  std::vector<int> &_nClusters_L3016,
+  std::vector<int> &_nClusters_L4004,
+  std::vector<int> &_nClusters_L4006,
+  std::vector<int> &_nClusters_L4008,
+  std::vector<int> &_nClusters_L4010,
+  std::vector<int> &_nClusters_L4016
+ 
+ ){
+std::vector<double> Theta_Phi;
+const double jtheta = jvector.Theta();
+const double jphi = jvector.Phi();
+int nCl_L1004 = 0; 
+int nCl_L1006 = 0;
+int nCl_L1008 = 0;
+int nCl_L1010 = 0;
+int nCl_L1016 = 0;
+int nCl_L2004 = 0;
+int nCl_L2006 = 0;
+int nCl_L2008 = 0;
+int nCl_L2010 = 0;
+int nCl_L2016 = 0;
+int nCl_L3004 = 0;
+int nCl_L3006 = 0;
+int nCl_L3008 = 0;
+int nCl_L3010 = 0;
+int nCl_L3016 = 0;
+int nCl_L4004 = 0;
+int nCl_L4006 = 0;
+int nCl_L4008 = 0;
+int nCl_L4010 = 0;
+int nCl_L4016 = 0;
+
+std::cout<<"PV = ("<<pv[0]<<", "<<pv[1]<<", "<<pv[2]<<")"<<std::endl;
+std::cout<<"jvector = ("<<jvector[0]<<", "<<jvector[1]<<", "<<jvector[2]<<")"<<std::endl;
+
+for ( unsigned int i = 0; i != n_clusters.size(); ++i ){ //loop over detUnits
+  for (int j = 0; j != n_clusters[i]; ++j){  //loop over clusters in each derUnit
+    double cluster_phi = GetPhi(cluster_x[i][j] - pv[0], cluster_y[i][j] - pv[1]);
+    double cluster_theta = GetTheta(cluster_x[i][j] - pv[0], cluster_y[i][j] - pv[1], cluster_z[i][j] - pv[2]);
+    double dR = dR_theta_phi(jtheta, cluster_theta, jphi, cluster_phi);
+    switch (Unit_layer[i]) {
+      case 1:
+        AddMatchedClusters(dR, nCl_L1004, nCl_L1006, nCl_L1008, nCl_L1010, nCl_L1016);
+        break;
+      case 2:
+        AddMatchedClusters(dR, nCl_L2004, nCl_L2006, nCl_L2008, nCl_L2010, nCl_L2016);
+        break;
+      case 3:
+        AddMatchedClusters(dR, nCl_L3004, nCl_L3006, nCl_L3008, nCl_L3010, nCl_L3016);
+        break;
+      case 4:
+        AddMatchedClusters(dR, nCl_L4004, nCl_L4006, nCl_L4008, nCl_L4010, nCl_L4016);
+        break;
+    }
+    if (dR<0.1) std::cout<<"cluster["<<i<<"]["<<j<<"] = ("<<cluster_x[i][j]<<", "<<cluster_y[i][j]<<", "<<cluster_z[i][j]<<")"<<std::endl;
+
+  }
+}
+std::cout<<std::endl;
+
+_nClusters_L1004.push_back(nCl_L1004); 
+_nClusters_L1006.push_back(nCl_L1006);
+_nClusters_L1008.push_back(nCl_L1008);
+_nClusters_L1010.push_back(nCl_L1010);
+_nClusters_L1016.push_back(nCl_L1016);
+_nClusters_L2004.push_back(nCl_L2004);
+_nClusters_L2006.push_back(nCl_L2006);
+_nClusters_L2008.push_back(nCl_L2008);
+_nClusters_L2010.push_back(nCl_L2010);
+_nClusters_L2016.push_back(nCl_L2016);
+_nClusters_L3004.push_back(nCl_L3004);
+_nClusters_L3006.push_back(nCl_L3006);
+_nClusters_L3008.push_back(nCl_L3008);
+_nClusters_L3010.push_back(nCl_L3010);
+_nClusters_L3016.push_back(nCl_L3016);
+_nClusters_L4004.push_back(nCl_L4004);
+_nClusters_L4006.push_back(nCl_L4006);
+_nClusters_L4008.push_back(nCl_L4008);
+_nClusters_L4010.push_back(nCl_L4010);
+_nClusters_L4016.push_back(nCl_L4016);
+
+return Theta_Phi;
+}
+
+double HitAnalyzer::GetPhi(const double X, const double Y){
+    if (X>0) return TMath::ATan(Y/X);
+    else if (X<0){
+      if (Y >= 0) return TMath::ATan(Y/X) + TMath::Pi();
+      else return TMath::ATan(Y/X) - TMath::Pi();
+      }
+    else{
+      if (Y>=0) return 0.5*TMath::Pi();
+      else return -0.5*TMath::Pi();
+      }
+}
+
+double HitAnalyzer::GetTheta(const double X, const double Y, const double Z){
+  return 0.5*TMath::Pi()-TMath::ATan(Z/TMath::Sqrt(X*X + Y*Y));
+}
+
+double HitAnalyzer::dR_theta_phi(const double &theta1, const double &theta2, const double &phi1, const double &phi2){
+  return TMath::Sqrt(TMath::Sq(TMath::Log(TMath::Tan(0.5*theta1))-TMath::Log(TMath::Tan(0.5*theta2))) + TMath::Sq(phi1-phi2));
+}
+
+void HitAnalyzer::AddMatchedClusters(double DR, int &nC004, int &nC006, int &nC008, int &nC010, int &nC016){
+  if (DR<0.16){
+    ++nC016;
+    if (DR<0.10){
+      ++nC010;
+      if (DR<0.08){
+        ++nC008;
+        if (DR<0.06){
+          ++nC006;
+          if (DR<0.04){
+            ++nC004;
+          }
+        }
+      }
+    }
+  }
+
 }
 
 //define this as a plug-in
