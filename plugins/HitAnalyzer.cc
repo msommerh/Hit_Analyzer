@@ -88,7 +88,7 @@ private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
-  bool ClusterMatcher(const TLorentzVector &jvector, 
+  void ClusterMatcher(const TLorentzVector &jvector, 
   const std::vector<int> &n_clusters,
   const std::vector<std::vector<double>>  &cluster_x,
   const std::vector<std::vector<double>>  &cluster_y,
@@ -135,6 +135,8 @@ private:
   double pT_cut_;
   int nJets_cut_;
   double leading_jet_eta_;
+  bool loose_jets_cut_;
+  bool tight_jets_cut_;
        
   edm::EDGetTokenT< reco::GenParticleCollection>          genPtoken;
   edm::EDGetTokenT< reco::PFJetCollection >               ak4CHStoken;
@@ -145,17 +147,7 @@ private:
   edm::EDGetTokenT< reco::TrackCollection >               trackToken;
   edm::EDGetTokenT< reco::JetTagCollection >              csv2Token;
   edm::EDGetTokenT< edm::TriggerResults >		  HLTtriggersToken;
-     
-  //
-  // vector<reco::Vertex>                  "inclusiveSecondaryVertices"   ""                "RECO"
-  //   vector<reco::TrackExtra>              "generalTracks"             ""                "RECO"
-  //     vector<reco::TemplatedSecondaryVertexTagInfo<reco::IPTagInfo<vector<edm::Ptr<reco::Candidate> >,reco::JetTagInfo>,reco::VertexCompositePtrCandidate> >    "pfGhostTrackVertexTagInfos"   ""                "RECO"
-  //     vector<reco::TemplatedSecondaryVertexTagInfo<reco::IPTagInfo<vector<edm::Ptr<reco::Candidate> >,reco::JetTagInfo>,reco::VertexCompositePtrCandidate> >    "pfInclusiveSecondaryVertexFinderCvsLTagInfos"   ""                "RECO"
-  //     vector<reco::TemplatedSecondaryVertexTagInfo<reco::IPTagInfo<vector<edm::Ptr<reco::Candidate> >,reco::JetTagInfo>,reco::VertexCompositePtrCandidate> >    "pfInclusiveSecondaryVertexFinderTagInfos"   ""                "RECO"
-  //     vector<reco::TemplatedSecondaryVertexTagInfo<reco::IPTagInfo<vector<edm::Ptr<reco::Candidate> >,reco::JetTagInfo>,reco::VertexCompositePtrCandidate> >    "pfSecondaryVertexTagInfos"   ""                "RECO"
-  //           edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>    "pfSimpleInclusiveSecondaryVertexHighEffBJetTags"   ""                "RECO"
-  //           edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>    "pfSimpleSecondaryVertexHighEffBJetTags"   ""                "RECO"
-
+  
   // ----------member data ---------------------------
   
     
@@ -166,6 +158,7 @@ private:
   std::vector<double>  jet_mass;
   std::vector<int>     jet_pdgId;
   std::vector<double>  jet_bTag;
+  std::vector<bool>    jet_MC_bTag;
 
   std::vector<int>     nClusters_L1004;
   std::vector<int>     nClusters_L1006;
@@ -260,6 +253,8 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   pT_cut_ = conf.getUntrackedParameter<double>("pT_cut",0);
   nJets_cut_ = conf.getUntrackedParameter<int>("nJets_cut",0);
   leading_jet_eta_ = conf.getUntrackedParameter<double>("leading_jet_eta", 2.5);
+  loose_jets_cut_ = conf.getUntrackedParameter<bool>("loose_jets_cut", false);
+  tight_jets_cut_ = conf.getUntrackedParameter<bool>("tight_jets_cut", false);
         
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -300,6 +295,7 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
 
 
   if (isMC_) {
+    tree->Branch( "jet_MC_bTag"       , &jet_MC_bTag );
     tree->Branch( "nGenParticles"     , &nGenParticles );
     tree->Branch( "genParticle_pt"    , &genParticle_pt );
     tree->Branch( "genParticle_eta"   , &genParticle_eta );
@@ -404,9 +400,6 @@ void
     ++nPV;
   }
 
-//----------------------------------------------------------------------------------------------------------------------------------
-//working here
-
   //Jet selection loop:
 
   std::vector<reco::PFJetCollection::const_iterator> selected_jets;
@@ -423,7 +416,7 @@ void
   }
 
   for ( reco::PFJetCollection::const_iterator jet = ak4CHS->begin(); jet != ak4CHS->end(); ++jet ) { 
-    if (jet->pt()<pT_cut_ || !LooseJetsID(jet)) continue;
+    if (jet->pt()<pT_cut_ || (loose_jets_cut_ && !LooseJetsID(jet))) continue;
     if (jet != leading_jet1 && jet != leading_jet2){  //compare two the leading jets to see if the new jet has higher pt
       if (jet->pt() >= leading_jet1->pt()){
         leading_jet2 = leading_jet1;
@@ -433,116 +426,25 @@ void
         leading_jet2 = jet;
       }
     }
-    //TLorentzVector TVjet;
-    //TVjet.SetPtEtaPhiM(jet->pt(),jet->eta(),jet->phi(),jet->mass());
-   
 
     selected_jets.push_back(jet);
     ++nJets;
   }
 
   //event selection
-  if (nJets < nJets_cut_ || nPV < 1 || fabs(leading_jet1->eta()) < leading_jet_eta_ || fabs(leading_jet2->eta()) < leading_jet_eta_) return;
-  if (fabs(leading_jet1->eta()) < 2.4 && (leading_jet1->neutralHadronEnergyFraction() >= 0.9 || leading_jet1->neutralEmEnergyFraction() >= 0.9)) return;
-  if (fabs(leading_jet2->eta()) < 2.4 && (leading_jet2->neutralHadronEnergyFraction() >= 0.9 || leading_jet2->neutralEmEnergyFraction() >= 0.9)) return;
-
-//until here
-//-----------------------------------------------------------------------------------------------------------------------------------
-
+  if (nJets < nJets_cut_ || nPV < 1 || fabs(leading_jet1->eta()) >= leading_jet_eta_ || fabs(leading_jet2->eta()) >= leading_jet_eta_) return;
+  if (tight_jets_cut_){
+    if (fabs(leading_jet1->eta()) < 2.4 && (leading_jet1->neutralHadronEnergyFraction() >= 0.9 || leading_jet1->neutralEmEnergyFraction() >= 0.9)) return;
+    if (fabs(leading_jet2->eta()) < 2.4 && (leading_jet2->neutralHadronEnergyFraction() >= 0.9 || leading_jet2->neutralEmEnergyFraction() >= 0.9)) return;
+  }
 
    if (isMC_){ 
     // Loop opver gen particles
     TLorentzVector selectedGenP ;
-    std::cout<< " " << std::endl;
     for ( reco::GenParticleCollection::const_iterator gp = genPs->begin(); gp != genPs->end(); ++gp ) {
-      bool BMother = false;
-      int motherID = false;
-      for( unsigned int m=0; m<gp->numberOfMothers(); ++m ){
-        motherID =  gp->mother(m)->pdgId();
-        if ( (fabs(gp->mother(m)->pdgId())>500 && fabs(gp->mother(m)->pdgId())<600) || (fabs(gp->mother(m)->pdgId())>5000 && fabs(gp->mother(m)->pdgId())<6000) ) {
-          BMother = true;
-	  if (BMother) break;
-        }
-      }
-      
-      //if (BMother && (fabs(gp->pdgId())>500 && fabs(gp->pdgId())<600)) continue;
-
-      std::string idString = std::to_string(fabs(gp->pdgId()));
-      /*
-      if ( BMother == true || (gp->status()<30 && gp->status()>20) || (fabs(gp->pdgId())>500 && fabs(gp->pdgId())<600) 
-      || (idString.find("511") != std::string::npos)  || (idString.find("521") != std::string::npos)
-      || (idString.find("513") != std::string::npos)  || (idString.find("523") != std::string::npos)
-      || (idString.find("531") != std::string::npos)  || (idString.find("541") != std::string::npos)
-      || (idString.find("533") != std::string::npos)  || (idString.find("543") != std::string::npos) 
-      || (idString.find("551") != std::string::npos)  || (idString.find("553") != std::string::npos) 
-      || (idString.find("555") != std::string::npos)  || (idString.find("557") != std::string::npos) ){ */ 
-      if (true){
-	std::vector<const reco::Candidate*> genParticle_Daughters;
-	double decayvx_x = 0;
-	double decayvx_y = 0;
-	double decayvx_z = 0;
-	double decayvx_r = 0;
-	double decayvx_phi = 0;
-	double decayvx_eta = 0;
-
-	bool IdenticalDaughter = false;
-	unsigned int dau_identical = 0;
-	for (unsigned int dau=0; dau < gp->numberOfDaughters(); ++dau) {	//check if daughter identical to particle
-		if ((gp->daughter(dau)->pdgId() == gp->pdgId()) || ((fabs(gp->pdgId())>500 && fabs(gp->pdgId())<600) && (fabs(gp->daughter(dau)->pdgId())>500 && fabs(gp->daughter(dau)->pdgId())<600)) || ((fabs(gp->pdgId())>5000 && fabs(gp->pdgId())<6000) && (fabs(gp->daughter(dau)->pdgId())>5000 && fabs(gp->daughter(dau)->pdgId())<6000))) {
-			IdenticalDaughter = true;
-			dau_identical = dau;
-			break;
-			}
-		}
-	if (IdenticalDaughter){			//iterate over generations until daughter differs from particle
-//		std::cout<<std::endl<<"particle id = "<<gp->pdgId()<<std::endl;
-//		std::cout<<"Generation = "<<0<<std::endl;
-//		std::cout<<"identical daughter, id = "<<gp->daughter(0)->pdgId()<<std::endl; 	
-		int GenerationCounter = 1;
-		const reco::Candidate *tmp; 
-		tmp = gp->daughter(dau_identical);
-		LOOP:
-//		std::cout<<"Generation = "<<GenerationCounter<<std::endl;
-		IdenticalDaughter = false;
-		for (unsigned int dau=0; dau < tmp->numberOfDaughters(); ++dau) {
-			if ((tmp->pdgId() == tmp->daughter(dau)->pdgId()) || ((fabs(tmp->pdgId())>500 && fabs(tmp->pdgId())<600) && (fabs(tmp->daughter(dau)->pdgId())>500 && fabs(tmp->daughter(dau)->pdgId())<600)) || ((fabs(tmp->pdgId())>5000 && fabs(tmp->pdgId())<6000) && (fabs(tmp->daughter(dau)->pdgId())>5000 && fabs(tmp->daughter(dau)->pdgId())<6000))) {
-				tmp = tmp->daughter(dau);
-				dau = 0;
-				IdenticalDaughter = true;
-				++GenerationCounter;
-//				std::cout<<"identical daughter, id = "<<tmp->pdgId()<<std::endl;
-				break;
-				}		
-			}
-		if (IdenticalDaughter){
-			goto LOOP;
-			}
-		else {
-//			std::cout<<"Final daugthers:"<<std::endl;
-			for (unsigned int dau=0; dau < tmp->numberOfDaughters(); ++dau) {
-				genParticle_Daughters.push_back(tmp->daughter(dau));
-//				std::cout<<"d"<<dau<<"_id = "<<tmp->daughter(dau)->pdgId()<<std::endl;	
-				}
-			}
-		}
-	else {
-		for (unsigned int dau=0; dau < gp->numberOfDaughters(); ++dau) {
-			genParticle_Daughters.push_back(gp->daughter(dau));			
-			}
-		}
-	for (unsigned int dau=0; dau < genParticle_Daughters.size(); ++dau) {	//loop over the actual daughters
-		if (dau == 0){
-		decayvx_x = genParticle_Daughters[dau]->vertex().x();
-		decayvx_y = genParticle_Daughters[dau]->vertex().y();
-		decayvx_z = genParticle_Daughters[dau]->vertex().z();
-		decayvx_r = genParticle_Daughters[dau]->vertex().r();
-		decayvx_phi = genParticle_Daughters[dau]->vertex().phi();
-		decayvx_eta = genParticle_Daughters[dau]->vertex().eta();
-		}
-		break;								//break after first daughter since their vertices are the same
-		}
-	
-
+	//if ((fabs(gp->pdgId()) >500 && fabs(gp->pdgId()) <600) || (fabs(gp->pdgId()) >5000 && fabs(gp->pdgId()) <6000)) std::cout<<"got a B: "<<gp->pdgId()<<std::endl;
+        if (gp->status() != 23 && gp->status() !=2) continue;
+        if (fabs(gp->pdgId()) == 5 || (!(fabs(gp->pdgId()) > 500 && fabs(gp->pdgId())<600) && !(fabs(gp->pdgId()) > 5000 && fabs(gp->pdgId())<6000))) continue;
         TLorentzVector genP;
         genP.SetPtEtaPhiM(gp->pt(),gp->eta(),gp->phi(),gp->mass());
         int  pdgId = gp->pdgId();
@@ -554,29 +456,11 @@ void
         double vx_phi = gp->vertex().Coordinates().Phi(); 
         double vx_r   = gp->vertex().Coordinates().R(); 
 
-        /*
-	if ((fabs(gp->pdgId())>500 && fabs(gp->pdgId())<600) 
-      || (idString.find("511") != std::string::npos)  || (idString.find("521") != std::string::npos)
-      || (idString.find("513") != std::string::npos)  || (idString.find("523") != std::string::npos)
-      || (idString.find("531") != std::string::npos)  || (idString.find("541") != std::string::npos)
-      || (idString.find("533") != std::string::npos)  || (idString.find("543") != std::string::npos) 
-      || (idString.find("551") != std::string::npos)  || (idString.find("553") != std::string::npos) 
-      || (idString.find("555") != std::string::npos)  || (idString.find("557") != std::string::npos)){
-	const double distance = std::sqrt((decayvx_x-vx_x)*(decayvx_x-vx_x)+(decayvx_y-vx_y)*(decayvx_y-vx_y)+(decayvx_z-vx_z)*(decayvx_z-vx_z));
-	std::cout<<std::endl<<"particle pdgId() = "<<gp->pdgId()<<"\t pt = "<<gp->pt()<<std::endl<<"particle_vx = ("<<vx_x<<", "<<vx_y<<", "<<vx_z<<") \t decay_vx = ("<<decayvx_x<<", "<<decayvx_y<<", "<<decayvx_z<<")"<<std::endl<<"distance travelled = "<<distance<<std::endl;
-	std::cout<<"daughters: ";
-	for (unsigned int dau=0; dau < genParticle_Daughters.size(); ++dau) {
-	std::cout<<"   d"<<dau<<"_pdgId() = "<<genParticle_Daughters[dau]->pdgId();
-	}
-	std::cout<<std::endl;
-	}
-	*/
         genParticle_pt  .push_back(genP.Pt());
         genParticle_eta .push_back(genP.Eta());
         genParticle_phi .push_back(genP.Phi());
         genParticle_mass.push_back(genP.M());
         genParticle_pdgId.push_back(pdgId);
-        genParticle_mother_pdgId.push_back(motherID);
         genParticle_status.push_back(status);
         genParticle_vx_x   .push_back(vx_x   );
         genParticle_vx_y   .push_back(vx_y   );
@@ -584,19 +468,8 @@ void
         genParticle_vx_eta .push_back(vx_eta );
         genParticle_vx_phi .push_back(vx_phi );
         genParticle_vx_r   .push_back(vx_r   );
-	genParticle_decayvx_x   .push_back(decayvx_x   );
-        genParticle_decayvx_y   .push_back(decayvx_y   );
-        genParticle_decayvx_z   .push_back(decayvx_z   );
- 	genParticle_decayvx_r   .push_back(decayvx_r   );
-        genParticle_decayvx_eta   .push_back(decayvx_eta   );
-        genParticle_decayvx_phi   .push_back(decayvx_phi   );
- 
-
     }
-    }
-    
-
-  nGenParticles = genParticle_pt.size();
+    nGenParticles = genParticle_pt.size();
   }
   
   // Get vector of detunit ids and loop
@@ -764,11 +637,25 @@ void
     jet_mass.push_back(jet->mass());
 
     const std::vector<double> PV{PV_x[0], PV_y[0], PV_z[0]};
-    bool true_bTag = ClusterMatcher(TVjet, nClusters, cluster_globalx, cluster_globaly, cluster_globalz, detUnit_layer, PV, nClusters_L1004, nClusters_L1006, nClusters_L1008, nClusters_L1010, nClusters_L1016, nClusters_L2004, nClusters_L2006, nClusters_L2008, nClusters_L2010, nClusters_L2016, nClusters_L3004, nClusters_L3006, nClusters_L3008, nClusters_L3010, nClusters_L3016, nClusters_L4004, nClusters_L4006, nClusters_L4008, nClusters_L4010, nClusters_L4016
-
- );
+    ClusterMatcher(TVjet, nClusters, cluster_globalx, cluster_globaly, cluster_globalz, detUnit_layer, PV, nClusters_L1004, nClusters_L1006, nClusters_L1008, nClusters_L1010, nClusters_L1016, nClusters_L2004, nClusters_L2006, nClusters_L2008, nClusters_L2010, nClusters_L2016, nClusters_L3004, nClusters_L3006, nClusters_L3008, nClusters_L3010, nClusters_L3016, nClusters_L4004, nClusters_L4006, nClusters_L4008, nClusters_L4010, nClusters_L4016);
     
-    // b-tag infos
+    //true MC btag
+    if (isMC_){
+      bool true_bTag = false;
+      for (int p=0; p != nGenParticles ; ++p){
+        if (!(fabs(genParticle_pdgId[p])>500 && fabs(genParticle_pdgId[p])<600) && !(fabs(genParticle_pdgId[p])>5000 && fabs(genParticle_pdgId[p])<6000)) continue;
+        if (genParticle_status[p] != 2) continue;
+        TLorentzVector pvector;
+        pvector.SetPtEtaPhiM(genParticle_pt[p],genParticle_eta[p],genParticle_phi[p],genParticle_mass[p]);
+        if (TVjet.DeltaR(pvector) < 0.3){
+          true_bTag = true;
+          break;
+        }
+      }
+    jet_MC_bTag.push_back(true_bTag);
+    }
+
+    // CSV b-tag infos
     double match = 0.4;
     double csv2 = -99.;
     for (unsigned int i = 0; i != bTags.size(); ++i) {
@@ -782,7 +669,6 @@ void
     }
     jet_bTag.push_back(csv2);
   }
-  //nJets         = jet_pt.size();
 
 
   tree->Fill();
@@ -798,7 +684,8 @@ void HitAnalyzer::reset( void ){
   jet_mass.clear();
   jet_pdgId.clear();
   jet_bTag.clear();
-  
+  jet_MC_bTag.clear();
+
   nClusters_L1004.clear(); 
   nClusters_L1006.clear();
   nClusters_L1008.clear();
@@ -885,36 +772,6 @@ const reco::GenParticle *HitAnalyzer::findMother(const reco::GenParticle *partic
       }
       return 0;
     }
-//}
-
-// Find Daughters
-/*
-const std::vector<reco::Candidate> HitAnalyzer::findDaughters(const reco::GenParticle *particle) {
-	std::vector<reco::Candidate> daughters;
-	int pdgId = particle->pdgId();
-	bool identical = false;
-	unsigned int tmp;
-	if (particle->numberOfDaughters() == 0) {
-		return daughters;
-		}
-	for (unsigned int dau=0; dau < particle->numberOfDaughters(); ++dau ){
-		if (particle->daughter(dau)->pdgId() == pdgId) {
-			identical = true;
-			tmp = dau;
-			break;
-			}
-		}	
-	if (identical) {
-		return HitAnalyzer::findDaughters(particle->daughter(tmp));
-		}	
-	else {
-		for( unsigned int dau=0; dau < particle->numberOfDaughters(); ++dau ){
-			daughters.push_back(particle->daughter(dau));
-			}
-		return daughters;
-		}
-	}
-*/
               
 // ------------ method called once each job just before starting event loop  ------------
 void 
@@ -939,7 +796,7 @@ HitAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 // ------------ method matches clusters to a jet  ------------
-bool 
+void 
 HitAnalyzer::ClusterMatcher(const TLorentzVector &jvector, 
   const std::vector<int> &n_clusters,
   const std::vector<std::vector<double>>  &cluster_x,
@@ -969,7 +826,6 @@ HitAnalyzer::ClusterMatcher(const TLorentzVector &jvector,
   std::vector<int> &_nClusters_L4016
  
  ){
-bool true_bTag = false;
 const double jtheta = jvector.Theta();
 const double jphi = jvector.Phi();
 int nCl_L1004 = 0; 
@@ -1035,8 +891,6 @@ _nClusters_L4006.push_back(nCl_L4006);
 _nClusters_L4008.push_back(nCl_L4008);
 _nClusters_L4010.push_back(nCl_L4010);
 _nClusters_L4016.push_back(nCl_L4016);
-
-return true_bTag;
 }
 
 double HitAnalyzer::GetPhi(const double X, const double Y){

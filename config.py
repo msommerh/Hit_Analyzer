@@ -6,7 +6,7 @@ process.load("Configuration.Geometry.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 # process.load("Configuration.StandardSequences.Services_cff")
 process.TFileService = cms.Service("TFileService",
-                                    fileName = cms.string('flatTuple.root')
+                                    fileName = cms.string('flatTuple_MC.root')
                                    )
 
 
@@ -44,17 +44,21 @@ process.source = cms.Source("PoolSource",
         # 'file:/afs/cern.ch/work/t/thaarres/public/bTag_ntracks/CMSSW_9_2_1/src/btag_ntracks/TprimeBToTH_M-3000_Width-30p_LH_TuneCUETP8M2T4_14TeV-madgraph-pythia8.root'
         #'root://storage01.lcg.cscs.ch//pnfs/lcg.cscs.ch/cms/trivcat/store/user/thaarres/ZprimeBB/ZprimeBB_GEN_SIM_DIGI_RECO_v2/180319_095233/0000/B2G-RunIISpring16DR80-00005_148.root'
     	#'file:ZprimeBBbar_M2000_GENSIMDIGIRECO.root'
-	'file:/eos/cms/store/express/Run2018E/ExpressPhysics/FEVT/Express-v1/000/325/308/00000/023F1B34-4E2E-A343-8E2C-09C411E86530.root'
+	#'file:/eos/cms/store/express/Run2018E/ExpressPhysics/FEVT/Express-v1/000/325/308/00000/023F1B34-4E2E-A343-8E2C-09C411E86530.root'  #this data sample works
+	'file:/afs/cern.ch/work/t/thaarres/public/bTag_ntracks/CMSSW_9_4_0_patch1/src/bTag_nHits/HitAnalyzer/ZprimeBBbar_M4000_GENSIMDIGIRECO_1.root' #this MC file works
 	#'file:/eos/cms/store/express/Run2018E/ExpressPhysics/FEVT/Express-v1/000/325/308/00000/02CAA25B-F6B4-D94B-B996-DA3ED0EED10A.root'
 	)
 )
 process.demo = cms.EDAnalyzer('HitAnalyzer',
     Verbosity = cms.untracked.bool(False),
     phase1 = cms.untracked.bool(True),
-    isMC = cms.untracked.bool(False),
+    isMC = cms.untracked.bool(True),
     pT_cut = cms.untracked.double(20),
     nJets_cut = cms.untracked.int32(2),
+    #leading_jet_eta = cms.untracked.double(5),
     leading_jet_eta = cms.untracked.double(2.5),
+    loose_jets_cut = cms.untracked.bool(True),
+    tight_jets_cut = cms.untracked.bool(True),
     src = cms.InputTag("siPixelClusters"),
     HLTtriggers = cms.InputTag("TriggerResults", "", "HLT")
 )
