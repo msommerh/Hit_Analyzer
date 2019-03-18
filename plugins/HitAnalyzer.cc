@@ -88,7 +88,7 @@ private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
-  std::vector<double> ClusterMatcher(const TLorentzVector &jvector, 
+  bool ClusterMatcher(const TLorentzVector &jvector, 
   const std::vector<int> &n_clusters,
   const std::vector<std::vector<double>>  &cluster_x,
   const std::vector<std::vector<double>>  &cluster_y,
@@ -121,6 +121,7 @@ private:
   double GetTheta(const double X, const double Y, const double Z);
   double dR_theta_phi(const double &theta1, const double &theta2, const double &phi1, const double &phi2);
   void AddMatchedClusters(double DR, int &nC004, int &nC006, int &nC008, int &nC010, int &nC016);
+  bool LooseJetsID(reco::PFJetCollection::const_iterator _jet);
 
   void reset( void );
   const reco::GenParticle* findMother(const reco::GenParticle *particle);
@@ -131,6 +132,9 @@ private:
   bool printLocal;
   bool phase1_;
   bool isMC_;
+  double pT_cut_;
+  int nJets_cut_;
+  double leading_jet_eta_;
        
   edm::EDGetTokenT< reco::GenParticleCollection>          genPtoken;
   edm::EDGetTokenT< reco::PFJetCollection >               ak4CHStoken;
@@ -184,6 +188,7 @@ private:
   std::vector<int>     nClusters_L4010;
   std::vector<int>     nClusters_L4016;
 
+  int 		       nPV;
   std::vector<double>  PV_x;
   std::vector<double>  PV_y;
   std::vector<double>  PV_z; 
@@ -252,6 +257,9 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   printLocal = conf.getUntrackedParameter<bool>("Verbosity",false);
   phase1_ = conf.getUntrackedParameter<bool>("phase1",false);
   isMC_ = conf.getUntrackedParameter<bool>("isMC",false);
+  pT_cut_ = conf.getUntrackedParameter<double>("pT_cut",0);
+  nJets_cut_ = conf.getUntrackedParameter<int>("nJets_cut",0);
+  leading_jet_eta_ = conf.getUntrackedParameter<double>("leading_jet_eta", 2.5);
         
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -285,6 +293,7 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   tree->Branch( "nClusters_L4010", &nClusters_L4010 );
   tree->Branch( "nClusters_L4016", &nClusters_L4016 );
   
+  tree->Branch("nPV",  &nPV);
   tree->Branch("PV_x", &PV_x);
   tree->Branch("PV_y", &PV_y);
   tree->Branch("PV_z", &PV_z); 
@@ -383,12 +392,63 @@ void
   Handle<edm::TriggerResults		      > HLTtriggers; iEvent.getByToken(HLTtriggersToken, HLTtriggers);
   const reco::JetTagCollection & bTags = *(CSVs.product()); 
 
+
+  if (ak4CHS->begin() == ak4CHS->end()) return; //filter out events without any jets
+
   //Loop over PVs
   for (reco::VertexCollection::const_iterator pv=PVs->begin(); pv != PVs->end(); ++pv){
+    if (pv->ndof() <= 4 || fabs(pv->z()) >= 24 || fabs(pv->position().rho()) > 2) continue;
     PV_x.push_back(pv->x());
     PV_y.push_back(pv->y());
     PV_z.push_back(pv->z());
+    ++nPV;
   }
+
+//----------------------------------------------------------------------------------------------------------------------------------
+//working here
+
+  //Jet selection loop:
+
+  std::vector<reco::PFJetCollection::const_iterator> selected_jets;
+  
+  reco::PFJetCollection::const_iterator leading_jet1;
+  reco::PFJetCollection::const_iterator leading_jet2;
+  if (ak4CHS->begin()->pt() > (ak4CHS->begin()+1)->pt()){ //initialize search for the two leading jets by comparing the first two
+    leading_jet1 = ak4CHS->begin();
+    leading_jet2 = ak4CHS->begin()+1;
+  }
+  else {
+    leading_jet2 = ak4CHS->begin();
+    leading_jet1 = ak4CHS->begin()+1;
+  }
+
+  for ( reco::PFJetCollection::const_iterator jet = ak4CHS->begin(); jet != ak4CHS->end(); ++jet ) { 
+    if (jet->pt()<pT_cut_ || !LooseJetsID(jet)) continue;
+    if (jet != leading_jet1 && jet != leading_jet2){  //compare two the leading jets to see if the new jet has higher pt
+      if (jet->pt() >= leading_jet1->pt()){
+        leading_jet2 = leading_jet1;
+        leading_jet1 = jet;
+      }
+      else if (jet->pt() > leading_jet2->pt()){
+        leading_jet2 = jet;
+      }
+    }
+    //TLorentzVector TVjet;
+    //TVjet.SetPtEtaPhiM(jet->pt(),jet->eta(),jet->phi(),jet->mass());
+   
+
+    selected_jets.push_back(jet);
+    ++nJets;
+  }
+
+  //event selection
+  if (nJets < nJets_cut_ || nPV < 1 || fabs(leading_jet1->eta()) < leading_jet_eta_ || fabs(leading_jet2->eta()) < leading_jet_eta_) return;
+  if (fabs(leading_jet1->eta()) < 2.4 && (leading_jet1->neutralHadronEnergyFraction() >= 0.9 || leading_jet1->neutralEmEnergyFraction() >= 0.9)) return;
+  if (fabs(leading_jet2->eta()) < 2.4 && (leading_jet2->neutralHadronEnergyFraction() >= 0.9 || leading_jet2->neutralEmEnergyFraction() >= 0.9)) return;
+
+//until here
+//-----------------------------------------------------------------------------------------------------------------------------------
+
 
    if (isMC_){ 
     // Loop opver gen particles
@@ -690,13 +750,12 @@ void
     numberOfDetUnits++;
   }
   nDetUnits = numberOfDetUnits;
- 
 
+ 
   // Loop over jets
-  for ( reco::PFJetCollection::const_iterator jet = ak4CHS->begin(); jet != ak4CHS->end(); ++jet ) {
-    //std::cout<<"Jet_pT = "<<jet->pt()<<std::endl;
-    //if (jet->pt()<200.) continue;
-    if (jet->pt()<100.) continue;
+  for ( reco::PFJetCollection::const_iterator jet : selected_jets ) {
+  //for ( reco::PFJetCollection::const_iterator jet = ak4CHS->begin(); jet != ak4CHS->end(); ++jet ) {
+    //if (jet->pt()<pT_cut_) continue;
     TLorentzVector TVjet;
     TVjet.SetPtEtaPhiM(jet->pt(),jet->eta(),jet->phi(),jet->mass());
     jet_pt.push_back(jet->pt());
@@ -705,7 +764,7 @@ void
     jet_mass.push_back(jet->mass());
 
     const std::vector<double> PV{PV_x[0], PV_y[0], PV_z[0]};
-    std::vector<double> Theta_Phi = ClusterMatcher(TVjet, nClusters, cluster_globalx, cluster_globaly, cluster_globalz, detUnit_layer, PV, nClusters_L1004, nClusters_L1006, nClusters_L1008, nClusters_L1010, nClusters_L1016, nClusters_L2004, nClusters_L2006, nClusters_L2008, nClusters_L2010, nClusters_L2016, nClusters_L3004, nClusters_L3006, nClusters_L3008, nClusters_L3010, nClusters_L3016, nClusters_L4004, nClusters_L4006, nClusters_L4008, nClusters_L4010, nClusters_L4016
+    bool true_bTag = ClusterMatcher(TVjet, nClusters, cluster_globalx, cluster_globaly, cluster_globalz, detUnit_layer, PV, nClusters_L1004, nClusters_L1006, nClusters_L1008, nClusters_L1010, nClusters_L1016, nClusters_L2004, nClusters_L2006, nClusters_L2008, nClusters_L2010, nClusters_L2016, nClusters_L3004, nClusters_L3006, nClusters_L3008, nClusters_L3010, nClusters_L3016, nClusters_L4004, nClusters_L4006, nClusters_L4008, nClusters_L4010, nClusters_L4016
 
  );
     
@@ -713,7 +772,7 @@ void
     double match = 0.4;
     double csv2 = -99.;
     for (unsigned int i = 0; i != bTags.size(); ++i) {
-      if (bTags[i].first->pt()<170.) continue;
+      if (bTags[i].first->pt()<170.) continue; //this sets all values in current sample to -99
       TLorentzVector bTagJet;
       bTagJet.SetPtEtaPhiM(bTags[i].first->pt(),bTags[i].first->eta(),bTags[i].first->phi(),bTags[i].first->mass());
       float dR = TVjet.DeltaR(bTagJet);
@@ -723,8 +782,9 @@ void
     }
     jet_bTag.push_back(csv2);
   }
-  nJets         = jet_pt.size();
- 
+  //nJets         = jet_pt.size();
+
+
   tree->Fill();
 }
 
@@ -760,6 +820,7 @@ void HitAnalyzer::reset( void ){
   nClusters_L4010.clear();
   nClusters_L4016.clear();
 
+  nPV = 0;
   PV_x.clear();
   PV_y.clear();
   PV_z.clear();
@@ -878,7 +939,7 @@ HitAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 // ------------ method matches clusters to a jet  ------------
-std::vector<double> 
+bool 
 HitAnalyzer::ClusterMatcher(const TLorentzVector &jvector, 
   const std::vector<int> &n_clusters,
   const std::vector<std::vector<double>>  &cluster_x,
@@ -908,7 +969,7 @@ HitAnalyzer::ClusterMatcher(const TLorentzVector &jvector,
   std::vector<int> &_nClusters_L4016
  
  ){
-std::vector<double> Theta_Phi;
+bool true_bTag = false;
 const double jtheta = jvector.Theta();
 const double jphi = jvector.Phi();
 int nCl_L1004 = 0; 
@@ -932,9 +993,6 @@ int nCl_L4008 = 0;
 int nCl_L4010 = 0;
 int nCl_L4016 = 0;
 
-std::cout<<"PV = ("<<pv[0]<<", "<<pv[1]<<", "<<pv[2]<<")"<<std::endl;
-std::cout<<"jvector = ("<<jvector[0]<<", "<<jvector[1]<<", "<<jvector[2]<<")"<<std::endl;
-
 for ( unsigned int i = 0; i != n_clusters.size(); ++i ){ //loop over detUnits
   for (int j = 0; j != n_clusters[i]; ++j){  //loop over clusters in each derUnit
     double cluster_phi = GetPhi(cluster_x[i][j] - pv[0], cluster_y[i][j] - pv[1]);
@@ -954,11 +1012,8 @@ for ( unsigned int i = 0; i != n_clusters.size(); ++i ){ //loop over detUnits
         AddMatchedClusters(dR, nCl_L4004, nCl_L4006, nCl_L4008, nCl_L4010, nCl_L4016);
         break;
     }
-    if (dR<0.1) std::cout<<"cluster["<<i<<"]["<<j<<"] = ("<<cluster_x[i][j]<<", "<<cluster_y[i][j]<<", "<<cluster_z[i][j]<<")"<<std::endl;
-
   }
 }
-std::cout<<std::endl;
 
 _nClusters_L1004.push_back(nCl_L1004); 
 _nClusters_L1006.push_back(nCl_L1006);
@@ -981,7 +1036,7 @@ _nClusters_L4008.push_back(nCl_L4008);
 _nClusters_L4010.push_back(nCl_L4010);
 _nClusters_L4016.push_back(nCl_L4016);
 
-return Theta_Phi;
+return true_bTag;
 }
 
 double HitAnalyzer::GetPhi(const double X, const double Y){
@@ -1021,6 +1076,20 @@ void HitAnalyzer::AddMatchedClusters(double DR, int &nC004, int &nC006, int &nC0
     }
   }
 
+}
+
+bool HitAnalyzer::LooseJetsID(reco::PFJetCollection::const_iterator _jet){
+    if (_jet->neutralHadronEnergyFraction() < 0.99 && _jet->neutralEmEnergyFraction() < 0.99 && _jet->chargedMultiplicity()+_jet->neutralMultiplicity() > 1){
+      if (fabs(_jet->eta())<2.4 && (_jet->chargedHadronEnergyFraction() == 0 || _jet->chargedEmEnergyFraction() >= 0.99 || _jet->chargedMultiplicity() == 0)){
+        return false;  
+      }
+      else {
+        return true;
+      }
+    }
+    else {
+      return false;
+    }
 }
 
 //define this as a plug-in

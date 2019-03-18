@@ -52,6 +52,9 @@ process.demo = cms.EDAnalyzer('HitAnalyzer',
     Verbosity = cms.untracked.bool(False),
     phase1 = cms.untracked.bool(True),
     isMC = cms.untracked.bool(False),
+    pT_cut = cms.untracked.double(20),
+    nJets_cut = cms.untracked.int32(2),
+    leading_jet_eta = cms.untracked.double(2.5),
     src = cms.InputTag("siPixelClusters"),
     HLTtriggers = cms.InputTag("TriggerResults", "", "HLT")
 )
