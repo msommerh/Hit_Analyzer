@@ -75,6 +75,9 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 
+//for MET
+#include "DataFormats/METReco/interface/PFMET.h"
+#include "DataFormats/METReco/interface/PFMETFwd.h"
 
 class HitAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 public:
@@ -147,7 +150,8 @@ private:
   edm::EDGetTokenT< reco::TrackCollection >               trackToken;
   edm::EDGetTokenT< reco::JetTagCollection >              csv2Token;
   edm::EDGetTokenT< edm::TriggerResults >		  HLTtriggersToken;
-  
+  edm::EDGetTokenT< reco::PFMETCollection >		  METToken;
+
   // ----------member data ---------------------------
   
     
@@ -327,6 +331,7 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   std::string labelTracks("generalTracks");
   std::string labelCSV("pfCombinedSecondaryVertexV2BJetTags");
   std::string labelHLTtriggers("TriggerResults");	
+  std::string labelMET("pfMet");
 
   genPtoken      = consumes<reco::GenParticleCollection         > (edm::InputTag(labelgenP));
   ak8CHStoken    = consumes<reco::PFJetCollection               > (edm::InputTag(labelAK8s));
@@ -337,6 +342,7 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   csv2Token      = consumes<reco::JetTagCollection              > (edm::InputTag(labelCSV));
   trackToken     = consumes<reco::TrackCollection               > (edm::InputTag(labelTracks));
   HLTtriggersToken=consumes<edm::TriggerResults	    		> (HLTtriggers_);
+  METToken	 = consumes<reco::PFMETCollection		> (edm::InputTag(labelMET));
 
 }
 
@@ -386,8 +392,10 @@ void
   Handle<reco::VertexCollection               > SVs      ; iEvent.getByToken( svToken      , SVs      );
   Handle<reco::TrackCollection                > tracks   ; iEvent.getByToken( trackToken   , tracks   );
   Handle<edm::TriggerResults		      > HLTtriggers; iEvent.getByToken(HLTtriggersToken, HLTtriggers);
+  Handle<reco::PFMETCollection		      > METs	 ; iEvent.getByToken( METToken	   , METs     );
   const reco::JetTagCollection & bTags = *(CSVs.product()); 
 
+  //std::cout<<"MET = "<<(METs->front()).et()<<std::endl;
 
   if (ak4CHS->begin() == ak4CHS->end()) return; //filter out events without any jets
 
