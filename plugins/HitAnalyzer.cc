@@ -156,6 +156,7 @@ private:
   
     
   int                  nJets;
+  double	       dijet_mass;
   std::vector<double>  jet_pt;
   std::vector<double>  jet_eta;
   std::vector<double>  jet_phi;
@@ -265,6 +266,7 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   tree = fs->make<TTree>( "tree", "tree" );
 
   tree->Branch( "nJets"             , &nJets );
+  tree->Branch( "dijet_mass"        , &dijet_mass );
   tree->Branch( "jet_pt"            , &jet_pt );
   tree->Branch( "jet_eta"           , &jet_eta );
   tree->Branch( "jet_phi"           , &jet_phi );
@@ -314,14 +316,14 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
     tree->Branch( "genParticle_vx_eta" , &genParticle_vx_eta );
     tree->Branch( "genParticle_vx_phi" , &genParticle_vx_phi );
     tree->Branch( "genParticle_vx_r"   , &genParticle_vx_r   );
-    tree->Branch( "genParticle_decayvx_x"   , &genParticle_decayvx_x   );
-    tree->Branch( "genParticle_decayvx_y"   , &genParticle_decayvx_y   );
-    tree->Branch( "genParticle_decayvx_z"   , &genParticle_decayvx_z   );
-    tree->Branch( "genParticle_decayvx_eta" , &genParticle_decayvx_eta );
-    tree->Branch( "genParticle_decayvx_phi" , &genParticle_decayvx_phi );
-    tree->Branch( "genParticle_decayvx_r"   , &genParticle_decayvx_r   );
+//    tree->Branch( "genParticle_decayvx_x"   , &genParticle_decayvx_x   );
+//    tree->Branch( "genParticle_decayvx_y"   , &genParticle_decayvx_y   );
+//    tree->Branch( "genParticle_decayvx_z"   , &genParticle_decayvx_z   );
+//    tree->Branch( "genParticle_decayvx_eta" , &genParticle_decayvx_eta );
+//    tree->Branch( "genParticle_decayvx_phi" , &genParticle_decayvx_phi );
+//    tree->Branch( "genParticle_decayvx_r"   , &genParticle_decayvx_r   );
   }
-   
+  
   std::string labelgenP("genParticles");
   std::string labelAK8s("ak8PFJetsCHS");
   std::string labelAK4s("ak4PFJetsCHS");
@@ -678,6 +680,11 @@ void
     jet_bTag.push_back(csv2);
   }
 
+  //dijet mass
+  TLorentzVector TVLeadingJet1, TVLeadingJet2;
+  TVLeadingJet1.SetPtEtaPhiM(leading_jet1->pt(),leading_jet1->eta(),leading_jet1->phi(),leading_jet1->mass());
+  TVLeadingJet2.SetPtEtaPhiM(leading_jet2->pt(),leading_jet2->eta(),leading_jet2->phi(),leading_jet2->mass());
+  dijet_mass = (TVLeadingJet1 + TVLeadingJet2).M();
 
   tree->Fill();
 }
@@ -686,6 +693,7 @@ void
 void HitAnalyzer::reset( void ){
 
   nJets = 0;
+  dijet_mass = 0.;
   jet_pt.clear();
   jet_eta.clear();
   jet_phi.clear();
