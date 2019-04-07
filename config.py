@@ -1,10 +1,52 @@
 import FWCore.ParameterSet.Config as cms
+from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process = cms.Process("Demo")
 
 process.load("Configuration.Geometry.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 # process.load("Configuration.StandardSequences.Services_cff")
+
+
+#Filters:
+
+## HBHE Noise Filter
+process.load("CommonTools.RecoAlgos.HBHENoiseFilter_cfi")
+process.load("CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi")
+
+## The good primary vertex filter ____________________________________________||
+process.primaryVertexFilter = cms.EDFilter(
+    "VertexSelector",
+    src = cms.InputTag("offlinePrimaryVertices"),
+    cut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.Rho <= 2"),
+    filter = cms.bool(True)
+    )
+
+## The beam scraping filter __________________________________________________||
+process.noscraping = cms.EDFilter(
+    "FilterOutScraping",
+    applyfilter = cms.untracked.bool(True),
+    debugOn = cms.untracked.bool(False),
+    numtrack = cms.untracked.uint32(10),
+    thresh = cms.untracked.double(0.25)
+    )
+
+## The CSC beam halo tight filter ____________________________________________||
+process.load('RecoMET.METFilters.CSCTightHaloFilter_cfi')
+
+## The HCAL laser filter _____________________________________________________||
+process.load("RecoMET.METFilters.hcalLaserEventFilter_cfi")
+process.hcalLaserEventFilter.vetoByRunEventNumber=cms.bool(False)
+process.hcalLaserEventFilter.vetoByHBHEOccupancy=cms.bool(True)
+
+### The ECAL dead cell trigger primitive filter _______________________________||
+process.load('RecoMET.METFilters.EcalDeadCellTriggerPrimitiveFilter_cfi')
+process.EcalDeadCellTriggerPrimitiveFilter.tpDigiCollection = cms.InputTag("ecalTPSkimNA")
+
+### The EE bad SuperCrystal filter ____________________________________________||
+process.load('RecoMET.METFilters.eeBadScFilter_cfi')
+
+
 process.TFileService = cms.Service("TFileService",
                                     fileName = cms.string('flatTuple_test.root')
                                    )
@@ -37,10 +79,7 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
-file_path = 'file:/afs/cern.ch/user/m/msommerh/CMSSW_10_2_7/src/MC_production/crab_projects/crab_sequence_test_8/results/AOD_test_5to10_1_1.root'
-
 process.source = cms.Source("PoolSource",
-    # replace 'myfile.root' with the source file you want to use
     # fileNames = cms.untracked.vstring('root://cms-xrd-global.cern.ch//store/mc/RunIISpring16reHLT80/ZprimeToTTJet_M-4000_TuneCUETP8M1_13TeV-amcatnlo-pythia8/AODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/90000/00E593DA-7139-E611-86E4-0CC47A4D99A4.root')
     fileNames = cms.untracked.vstring(
 	#'file:/eos/cms/store/express/Run2018E/ExpressPhysics/FEVT/Express-v1/000/325/308/00000/023F1B34-4E2E-A343-8E2C-09C411E86530.root'  #this data sample works
@@ -51,6 +90,7 @@ process.source = cms.Source("PoolSource",
 	#'root://t3dcachedb03.psi.ch//pnfs/psi.ch/cms/trivcat/store/user/msommerh/MC_samples/ZPrime_to_BBar_2018/M4000/AOD_ZPrime_to_BBar_2018_M4000_17.root'
 	)
 )
+
 process.demo = cms.EDAnalyzer('HitAnalyzer',
     Verbosity = cms.untracked.bool(False),
     phase1 = cms.untracked.bool(True),
@@ -61,8 +101,19 @@ process.demo = cms.EDAnalyzer('HitAnalyzer',
     leading_jet_eta = cms.untracked.double(2.5),
     loose_jets_cut = cms.untracked.bool(True),
     tight_jets_cut = cms.untracked.bool(True),
+    MET_over_sumEt_cut = cms.untracked.double(0.5),
     src = cms.InputTag("siPixelClusters"),
     HLTtriggers = cms.InputTag("TriggerResults", "", "HLT")
 )
 
-process.p = cms.Path(process.demo)
+process.p = cms.Path(
+	process.noscraping *
+	process.HBHENoiseFilterResultProducer * 
+	process.HBHENoiseFilter * 
+	process.CSCTightHaloFilter *
+	process.hcalLaserEventFilter *
+	process.EcalDeadCellTriggerPrimitiveFilter *
+	process.eeBadScFilter *
+	process.primaryVertexFilter *
+	process.demo)
+#process.p = cms.Path(process.demo)

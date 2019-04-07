@@ -119,7 +119,7 @@ private:
   std::vector<int> &_nClusters_L4010,
   std::vector<int> &_nClusters_L4016
 
-  );//definitely need some more input parameters
+  );
   double GetPhi(const double X, const double Y);
   double GetTheta(const double X, const double Y, const double Z);
   double dR_theta_phi(const double &theta1, const double &theta2, const double &phi1, const double &phi2);
@@ -140,6 +140,8 @@ private:
   double leading_jet_eta_;
   bool loose_jets_cut_;
   bool tight_jets_cut_;
+  double MET_over_sumEt_cut_;
+
        
   edm::EDGetTokenT< reco::GenParticleCollection>          genPtoken;
   edm::EDGetTokenT< reco::PFJetCollection >               ak4CHStoken;
@@ -152,9 +154,12 @@ private:
   edm::EDGetTokenT< edm::TriggerResults >		  HLTtriggersToken;
   edm::EDGetTokenT< reco::PFMETCollection >		  METToken;
 
+ 
+
   // ----------member data ---------------------------
   
-    
+  double	       MET_over_sumEt;
+ 
   int                  nJets;
   double	       dijet_mass;
   std::vector<double>  jet_pt;
@@ -260,10 +265,13 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   leading_jet_eta_ = conf.getUntrackedParameter<double>("leading_jet_eta", 2.5);
   loose_jets_cut_ = conf.getUntrackedParameter<bool>("loose_jets_cut", false);
   tight_jets_cut_ = conf.getUntrackedParameter<bool>("tight_jets_cut", false);
-        
+  MET_over_sumEt_cut_ = conf.getUntrackedParameter<double>("MET_over_sumEt_cut", 1.);
+     
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>( "tree", "tree" );
+
+  tree->Branch( "MET_over_sumEt"    , &MET_over_sumEt);
 
   tree->Branch( "nJets"             , &nJets );
   tree->Branch( "dijet_mass"        , &dijet_mass );
@@ -397,13 +405,13 @@ void
   Handle<reco::PFMETCollection		      > METs	 ; iEvent.getByToken( METToken	   , METs     );
   const reco::JetTagCollection & bTags = *(CSVs.product()); 
 
-  //std::cout<<"MET = "<<(METs->front()).et()<<std::endl;
+  MET_over_sumEt = (METs->front()).et()/(METs->front()).sumEt();
 
   if (ak4CHS->begin() == ak4CHS->end()) return; //filter out events without any jets
 
   //Loop over PVs
   for (reco::VertexCollection::const_iterator pv=PVs->begin(); pv != PVs->end(); ++pv){
-    if (pv->ndof() <= 4 || fabs(pv->z()) >= 24 || fabs(pv->position().rho()) > 2) continue;
+    //if (pv->ndof() <= 4 || fabs(pv->z()) >= 24 || fabs(pv->position().rho()) > 2) continue;
     PV_x.push_back(pv->x());
     PV_y.push_back(pv->y());
     PV_z.push_back(pv->z());
@@ -442,6 +450,7 @@ void
   }
 
   //event selection
+  if (MET_over_sumEt>=MET_over_sumEt_cut_) return;
   if (nJets < nJets_cut_ || nPV < 1 || fabs(leading_jet1->eta()) >= leading_jet_eta_ || fabs(leading_jet2->eta()) >= leading_jet_eta_) return;
   if (tight_jets_cut_){
     if (fabs(leading_jet1->eta()) < 2.4 && (leading_jet1->neutralHadronEnergyFraction() >= 0.9 || leading_jet1->neutralEmEnergyFraction() >= 0.9)) return;
@@ -691,6 +700,8 @@ void
 
 // Private methods
 void HitAnalyzer::reset( void ){
+
+  MET_over_sumEt = 0;
 
   nJets = 0;
   dijet_mass = 0.;
