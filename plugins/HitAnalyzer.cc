@@ -154,6 +154,10 @@ private:
   edm::EDGetTokenT< edm::TriggerResults >		  HLTtriggersToken;
   edm::EDGetTokenT< reco::PFMETCollection >		  METToken;
 
+  //trying to implement deepCSV
+  edm::EDGetTokenT< reco::JetTagCollection >		deepCSVToken_probb;
+  edm::EDGetTokenT< reco::JetTagCollection >		deepCSVToken_probbb;
+  //end deepCSV
  
 
   // ----------member data ---------------------------
@@ -168,7 +172,13 @@ private:
   std::vector<double>  jet_mass;
   std::vector<int>     jet_pdgId;
   std::vector<double>  jet_bTag;
-  std::vector<bool>    jet_MC_bTag;
+
+  //trying to implement deepCSV:
+  std::vector<double>  jet_deepCSV_probb;
+  std::vector<double>  jet_deepCSV_probbb;
+  //end deepCSV
+
+  std::vector<int>     jet_MC_bTag;
 
   std::vector<int>     nClusters_L1004;
   std::vector<int>     nClusters_L1006;
@@ -280,7 +290,12 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   tree->Branch( "jet_phi"           , &jet_phi );
   tree->Branch( "jet_mass"          , &jet_mass );
   tree->Branch( "jet_bTag"          , &jet_bTag );
- 
+
+  //trying to implement deepCSV:
+  tree->Branch( "jet_deepCSV_probb"  , &jet_deepCSV_probb );
+  tree->Branch( "jet_deepCSV_probbb"  , &jet_deepCSV_probbb );
+  //end deepCSV
+
   tree->Branch( "nClusters_L1004", &nClusters_L1004 ); 
   tree->Branch( "nClusters_L1006", &nClusters_L1006 );
   tree->Branch( "nClusters_L1008", &nClusters_L1008 );
@@ -354,6 +369,15 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   HLTtriggersToken=consumes<edm::TriggerResults	    		> (HLTtriggers_);
   METToken	 = consumes<reco::PFMETCollection		> (edm::InputTag(labelMET));
 
+  //trying to implement filters
+  //std::string HCALlaserNoiseFilter_Selector_ = "Flag_hcalLaserEventFilter";
+  //end filters
+
+  //trying to implement deepCSV
+  //std::string labelDeepCSV("pfDeepCSVJetTags");//, "probb", "RECO");
+  deepCSVToken_probb  = consumes<reco::JetTagCollection		> (edm::InputTag("pfDeepCSVJetTags", "probb", "RECO"));
+  deepCSVToken_probbb  = consumes<reco::JetTagCollection	> (edm::InputTag("pfDeepCSVJetTags", "probbb", "RECO"));
+  //end deepCSV
 }
 
 
@@ -404,6 +428,24 @@ void
   Handle<edm::TriggerResults		      > HLTtriggers; iEvent.getByToken(HLTtriggersToken, HLTtriggers);
   Handle<reco::PFMETCollection		      > METs	 ; iEvent.getByToken( METToken	   , METs     );
   const reco::JetTagCollection & bTags = *(CSVs.product()); 
+
+  //trying to implement filters:
+  //event.getByToken(noiseFilterToken_, noiseFilterBits_);
+  //const edm::TriggerNames &names = event.triggerNames(*noiseFilterBits_);
+  //end filters
+
+  //trying to implement deepCSV:
+  Handle<reco::JetTagCollection               > deepCSVs_probb     ; iEvent.getByToken( deepCSVToken_probb, deepCSVs_probb );
+  const reco::JetTagCollection & deepbTags_probb = *(deepCSVs_probb.product());
+  Handle<reco::JetTagCollection               > deepCSVs_probbb     ; iEvent.getByToken( deepCSVToken_probbb, deepCSVs_probbb );
+  const reco::JetTagCollection & deepbTags_probbb = *(deepCSVs_probbb.product());
+  //end deepCSV
+
+  // to print all available HLTs:
+  //const edm::TriggerNames& trigNames = iEvent.triggerNames(*HLTtriggers);
+  //for (unsigned int i=0; i<HLTtriggers->size(); ++i) {
+  // std::cout<<"trigger number "<<i<<": "<<trigNames.triggerName(i)<<std::endl;
+  //}
 
   MET_over_sumEt = (METs->front()).et()/(METs->front()).sumEt();
 
@@ -660,14 +702,14 @@ void
     
     //true MC btag
     if (isMC_){
-      bool true_bTag = false;
+      int true_bTag = 0;
       for (int p=0; p != nGenParticles ; ++p){
         if (!(fabs(genParticle_pdgId[p])>500 && fabs(genParticle_pdgId[p])<600) && !(fabs(genParticle_pdgId[p])>5000 && fabs(genParticle_pdgId[p])<6000)) continue;
         if (genParticle_status[p] != 2) continue;
         TLorentzVector pvector;
         pvector.SetPtEtaPhiM(genParticle_pt[p],genParticle_eta[p],genParticle_phi[p],genParticle_mass[p]);
         if (TVjet.DeltaR(pvector) < 0.3){
-          true_bTag = true;
+          true_bTag = 1;
           break;
         }
       }
@@ -678,7 +720,7 @@ void
     double match = 0.4;
     double csv2 = -99.;
     for (unsigned int i = 0; i != bTags.size(); ++i) {
-      if (bTags[i].first->pt()<170.) continue; //this sets all values in current sample to -99
+      //if (bTags[i].first->pt()<170.) continue; //this sets all values in current sample to -99
       TLorentzVector bTagJet;
       bTagJet.SetPtEtaPhiM(bTags[i].first->pt(),bTags[i].first->eta(),bTags[i].first->phi(),bTags[i].first->mass());
       float dR = TVjet.DeltaR(bTagJet);
@@ -687,6 +729,24 @@ void
       csv2 = bTags[i].second; 
     }
     jet_bTag.push_back(csv2);
+
+    // trying to implement deepCSV
+    double deepmatch = 0.4;
+    double deepcsv_probb = -99.;
+    double deepcsv_probbb = -99.;
+    for (unsigned int i = 0; i != deepbTags_probb.size(); ++i) {
+      TLorentzVector deepbTagJet;
+      deepbTagJet.SetPtEtaPhiM(deepbTags_probb[i].first->pt(),deepbTags_probb[i].first->eta(),deepbTags_probb[i].first->phi(),deepbTags_probb[i].first->mass());
+      float dR = TVjet.DeltaR(deepbTagJet);
+      if (dR > deepmatch ) continue;
+      deepmatch = dR;
+      deepcsv_probb = deepbTags_probb[i].second;
+      deepcsv_probbb = deepbTags_probbb[i].second;
+    }
+    jet_deepCSV_probb.push_back(deepcsv_probb);
+    jet_deepCSV_probbb.push_back(deepcsv_probbb);
+    //end deepCSV
+
   }
 
   //dijet mass
@@ -711,6 +771,12 @@ void HitAnalyzer::reset( void ){
   jet_mass.clear();
   jet_pdgId.clear();
   jet_bTag.clear();
+
+  //trying to implement deepCSV:
+  jet_deepCSV_probb.clear();
+  jet_deepCSV_probbb.clear();
+  //end deepCSV
+  
   jet_MC_bTag.clear();
 
   nClusters_L1004.clear(); 
