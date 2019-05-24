@@ -90,8 +90,8 @@ process.source = cms.Source("PoolSource",
 	#'file:/afs/cern.ch/user/m/msommerh/CMSSW_10_2_7/src/MC_production/crab_projects/crab_MC_QCD_DR2_test_1/results/DR_step2_default_5to10_0_1.root'
 	#'root://t3dcachedb03.psi.ch//pnfs/psi.ch/cms/trivcat/store/user/msommerh/MC_samples/ZPrime_to_BBar_2018/M4000/AOD_ZPrime_to_BBar_2018_M4000_17.root'
 	#"file:/eos/user/m/msommerh/MC_samples/ZPrime_to_BBar_2018/M4000/AOD_ZPrime_to_BBar_2018_M4000_17.root"
-	"file:AOD_ZPrime_to_BBar_2018_M4000_1.root"
-	#"file:AOD_ZPrime_to_BBar_2017_M4000_1.root"
+	#"file:AOD_ZPrime_to_BBar_2018_M4000_1.root"
+	"file:AOD_ZPrime_to_BBar_2017_M4000_1.root"
 	#"file:QCD_1800to2400_1.root"
 	)
 )
@@ -102,12 +102,18 @@ process.demo = cms.EDAnalyzer('HitAnalyzer',
     Verbosity = cms.untracked.bool(False),
     phase1 = cms.untracked.bool(True),
     isMC = cms.untracked.bool(True),
-    pT_cut = cms.untracked.double(200),
-    nJets_cut = cms.untracked.int32(2),
-    leading_jet_eta = cms.untracked.double(2.5),
-    loose_jets_cut = cms.untracked.bool(True),
-    tight_jets_cut = cms.untracked.bool(True),
-    MET_over_sumEt_cut = cms.untracked.double(0.5),
+    #pT_cut = cms.untracked.double(200),
+    #nJets_cut = cms.untracked.int32(2),
+    #leading_jet_eta = cms.untracked.double(2.5),
+    #loose_jets_cut = cms.untracked.bool(True),
+    #tight_jets_cut = cms.untracked.bool(True),
+    #MET_over_sumEt_cut = cms.untracked.double(0.5),
+    pT_cut = cms.untracked.double(0),
+    nJets_cut = cms.untracked.int32(0),
+    leading_jet_eta = cms.untracked.double(100),
+    loose_jets_cut = cms.untracked.bool(False),
+    tight_jets_cut = cms.untracked.bool(False),
+    MET_over_sumEt_cut = cms.untracked.double(100),
     src = cms.InputTag("siPixelClusters"),
     HLTtriggers = cms.InputTag("TriggerResults", "", "HLT")
 )

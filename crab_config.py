@@ -42,9 +42,9 @@ datasets_2018 = ["/MC_ZPrime_to_BBar_2018_M1000/msommerh-AOD-2fd59cbde119ecab78a
 bg_bins = ['170to300', '300to470', '470to600', '600to800', '800to1000', '1000to1400', '1400to1800', '1800to2400', '2400to3200', '3200toInf']
 signal_bins = ['1000', '1200', '1400', '1600', '1800', '2000', '2500', '3000', '3500', '4000', '4500', '5000', '5500', '6000']
 
-data_nr =  9
+data_nr = 9
 
-config.General.requestName = 'btagHits_2017_'+bg_bins[data_nr]+"_4"
+config.General.requestName = 'updated_matching_nocuts_QCD_'+bg_bins[data_nr]+"_0"
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 #config.General.transferLogs = True
@@ -64,10 +64,10 @@ config.Data.splitting = 'FileBased'
 #config.Data.splitting = 'EventAwareLumiBased'
 config.Data.unitsPerJob = 1
 #totalUnits = 3
-config.Data.outLFNDirBase = '/store/user/msommerh/HitAnalyzer4/QCD'
+config.Data.outLFNDirBase = '/store/user/msommerh/HitAnalyzer_updated_nocuts/QCD'
 #config.Data.outLFNDirBase = '/afs/cern.ch/work/m/msommerh/public/MC_samples/ZPrime_to_BBar_M4000/flat_tuples/'
 #config.Data.outLFNDirBase = '/t3home/msommerh/samples/'
 config.Data.publication = False
-config.Data.outputDatasetTag = 'btagHits_QCD_'+bg_bins[data_nr]
+config.Data.outputDatasetTag = 'updated_matching_nocuts_QCD_'+bg_bins[data_nr]
 
 config.Site.storageSite = 'T3_CH_PSI'

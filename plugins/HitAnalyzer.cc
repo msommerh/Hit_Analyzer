@@ -128,7 +128,9 @@ private:
 
   void reset( void );
   const reco::GenParticle* findMother(const reco::GenParticle *particle);
-      
+  //for Zprime fraction   
+  const reco::GenParticle* findMother(std::vector<reco::GenParticle>::const_iterator& particle);   
+  //end Zprime fraction
   edm::ParameterSet conf_;
   edm::InputTag src_;
   edm::InputTag HLTtriggers_;
@@ -226,7 +228,10 @@ private:
   std::vector<double>  genParticle_decayvx_eta ;
   std::vector<double>  genParticle_decayvx_phi ;
   std::vector<double>  genParticle_decayvx_r   ;
-  
+  //for Zprime fraction
+  std::vector<int>	genParticle_motherID;
+  std::vector<int>      jet_BMotherID;
+  //end Zprime fraction
   int                          nDetUnits;
   std::vector<unsigned int>    detUnit_subdetId;
   std::vector< int>           detUnit_layer ; // 1-3
@@ -345,6 +350,11 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
 //    tree->Branch( "genParticle_decayvx_eta" , &genParticle_decayvx_eta );
 //    tree->Branch( "genParticle_decayvx_phi" , &genParticle_decayvx_phi );
 //    tree->Branch( "genParticle_decayvx_r"   , &genParticle_decayvx_r   );
+    //for Zprime fraction
+    tree->Branch( "genParticle_motherID" , &genParticle_motherID );
+    tree->Branch( "jet_BMotherID"	 , &jet_BMotherID	);
+    //end Zprime fraction
+    
   }
   
   std::string labelgenP("genParticles");
@@ -503,9 +513,11 @@ void
     // Loop opver gen particles
     TLorentzVector selectedGenP ;
     for ( reco::GenParticleCollection::const_iterator gp = genPs->begin(); gp != genPs->end(); ++gp ) {
-	//if ((fabs(gp->pdgId()) >500 && fabs(gp->pdgId()) <600) || (fabs(gp->pdgId()) >5000 && fabs(gp->pdgId()) <6000)) std::cout<<"got a B: "<<gp->pdgId()<<std::endl;
         if (gp->status() != 23 && gp->status() !=2) continue;
-        if (fabs(gp->pdgId()) == 5 || (!(fabs(gp->pdgId()) > 500 && fabs(gp->pdgId())<600) && !(fabs(gp->pdgId()) > 5000 && fabs(gp->pdgId())<6000))) continue;
+        //if (fabs(gp->pdgId()) == 5 || (!(fabs(gp->pdgId()) > 500 && fabs(gp->pdgId())<600) && !(fabs(gp->pdgId()) > 5000 && fabs(gp->pdgId())<6000))) continue;
+        //if (gp->pt() < 350) continue;	
+	if (gp->status() == 23 && fabs(gp->pdgId()) == 5) continue;
+	if (gp->status() == 2 && !(fabs(gp->pdgId()) > 500 && fabs(gp->pdgId())<600) && !(fabs(gp->pdgId()) > 5000 && fabs(gp->pdgId())<6000)) continue;
         TLorentzVector genP;
         genP.SetPtEtaPhiM(gp->pt(),gp->eta(),gp->phi(),gp->mass());
         int  pdgId = gp->pdgId();
@@ -516,7 +528,6 @@ void
         double vx_eta = gp->vertex().Coordinates().Eta(); 
         double vx_phi = gp->vertex().Coordinates().Phi(); 
         double vx_r   = gp->vertex().Coordinates().R(); 
-
         genParticle_pt  .push_back(genP.Pt());
         genParticle_eta .push_back(genP.Eta());
         genParticle_phi .push_back(genP.Phi());
@@ -529,6 +540,9 @@ void
         genParticle_vx_eta .push_back(vx_eta );
         genParticle_vx_phi .push_back(vx_phi );
         genParticle_vx_r   .push_back(vx_r   );
+	//for Zprime fraction
+	if (gp->status() == 2) genParticle_motherID.push_back(findMother(findMother(gp))->pdgId());
+	//end Zprime fraction
     }
     nGenParticles = genParticle_pt.size();
   }
@@ -702,18 +716,38 @@ void
     
     //true MC btag
     if (isMC_){
-      int true_bTag = 0;
+      int true_bTag = -10;
+      //Zprime fraction
+      int bJet_mother = 0;
+      //end Zprime fraction
       for (int p=0; p != nGenParticles ; ++p){
-        if (!(fabs(genParticle_pdgId[p])>500 && fabs(genParticle_pdgId[p])<600) && !(fabs(genParticle_pdgId[p])>5000 && fabs(genParticle_pdgId[p])<6000)) continue;
-        if (genParticle_status[p] != 2) continue;
-        TLorentzVector pvector;
-        pvector.SetPtEtaPhiM(genParticle_pt[p],genParticle_eta[p],genParticle_phi[p],genParticle_mass[p]);
-        if (TVjet.DeltaR(pvector) < 0.3){
-          true_bTag = 1;
-          break;
-        }
+        //if (!(fabs(genParticle_pdgId[p])>500 && fabs(genParticle_pdgId[p])<600) && !(fabs(genParticle_pdgId[p])>5000 && fabs(genParticle_pdgId[p])<6000)) continue;
+        //if (genParticle_status[p] != 2) continue;
+	if (genParticle_pt[p] < 350) continue;
+	if (genParticle_status[p] == 2){
+          TLorentzVector pvector;
+          pvector.SetPtEtaPhiM(genParticle_pt[p],genParticle_eta[p],genParticle_phi[p],genParticle_mass[p]);
+          if (TVjet.DeltaR(pvector) < 0.3){
+            true_bTag = 1;
+	    //checking Zprime fraction
+	    bJet_mother = genParticle_motherID[p];
+	    //end Zprime fraction
+            break;
+          }
+	}
+	else if (genParticle_status[p] == 23){
+          TLorentzVector pvector;
+          pvector.SetPtEtaPhiM(genParticle_pt[p],genParticle_eta[p],genParticle_phi[p],genParticle_mass[p]);
+          if (TVjet.DeltaR(pvector) < 0.3){
+            true_bTag = 0;
+            break;
+            }	
+	}
       }
     jet_MC_bTag.push_back(true_bTag);
+    //Zprime fraction
+    jet_BMotherID.push_back(bJet_mother);
+    //end Zprime fraction
     }
 
     // CSV b-tag infos
@@ -825,7 +859,10 @@ void HitAnalyzer::reset( void ){
   genParticle_decayvx_eta.clear(); 
   genParticle_decayvx_phi.clear(); 
   genParticle_decayvx_r  .clear();
-  
+  //for Zprime fraction
+  genParticle_motherID.clear();
+  jet_BMotherID.clear();
+  //end Zprime fraction 
   
   nClusters.clear();
   cluster_sizex.clear();
@@ -852,7 +889,20 @@ void HitAnalyzer::reset( void ){
 }
 
 // Find mother
-//if (isMC_){
+//for Zprime fraction
+const reco::GenParticle *HitAnalyzer::findMother(std::vector<reco::GenParticle>::const_iterator& particle) {
+    const reco::GenParticle *tmp = &(*particle);
+    int pdgId = particle->pdgId();
+    while(const reco::GenParticle *mother = dynamic_cast<const reco::GenParticle *>(tmp->mother())) {
+      if(mother->pdgId() == pdgId) {
+        tmp = mother;
+        continue;
+      }
+        return mother;
+      }
+      return 0;
+    }
+//end Zprime fraction
 const reco::GenParticle *HitAnalyzer::findMother(const reco::GenParticle *particle) {
       const reco::GenParticle *tmp = particle;
       int pdgId = particle->pdgId();
