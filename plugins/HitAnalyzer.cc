@@ -85,7 +85,6 @@ public:
   ~HitAnalyzer();
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-  //const std::vector<reco::Candidate> findDaughters(const reco::GenParticle *particle); 
 
 private:
   virtual void beginJob() override;
@@ -128,9 +127,7 @@ private:
 
   void reset( void );
   const reco::GenParticle* findMother(const reco::GenParticle *particle);
-  //for Zprime fraction   
-  const reco::GenParticle* findMother(std::vector<reco::GenParticle>::const_iterator& particle);   
-  //end Zprime fraction
+  const reco::GenParticle* findMother(std::vector<reco::GenParticle>::const_iterator& particle);    //to check how many b's result from Zprime decays
   edm::ParameterSet conf_;
   edm::InputTag src_;
   edm::InputTag HLTtriggers_;
@@ -155,11 +152,8 @@ private:
   edm::EDGetTokenT< reco::JetTagCollection >              csv2Token;
   edm::EDGetTokenT< edm::TriggerResults >		  HLTtriggersToken;
   edm::EDGetTokenT< reco::PFMETCollection >		  METToken;
-
-  //trying to implement deepCSV
   edm::EDGetTokenT< reco::JetTagCollection >		deepCSVToken_probb;
   edm::EDGetTokenT< reco::JetTagCollection >		deepCSVToken_probbb;
-  //end deepCSV
  
 
   // ----------member data ---------------------------
@@ -174,11 +168,8 @@ private:
   std::vector<double>  jet_mass;
   std::vector<int>     jet_pdgId;
   std::vector<double>  jet_bTag;
-
-  //trying to implement deepCSV:
   std::vector<double>  jet_deepCSV_probb;
   std::vector<double>  jet_deepCSV_probbb;
-  //end deepCSV
 
   std::vector<int>     jet_MC_bTag;
 
@@ -228,10 +219,9 @@ private:
   std::vector<double>  genParticle_decayvx_eta ;
   std::vector<double>  genParticle_decayvx_phi ;
   std::vector<double>  genParticle_decayvx_r   ;
-  //for Zprime fraction
   std::vector<int>	genParticle_motherID;
   std::vector<int>      jet_BMotherID;
-  //end Zprime fraction
+
   int                          nDetUnits;
   std::vector<unsigned int>    detUnit_subdetId;
   std::vector< int>           detUnit_layer ; // 1-3
@@ -270,7 +260,6 @@ private:
 //
 HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
 : conf_(conf), src_(conf.getParameter<edm::InputTag>( "src" )), HLTtriggers_(conf.getParameter<edm::InputTag>( "HLTtriggers" )) { 
-//: conf_(conf), src_(conf.getParameter<edm::InputTag>( "src" )) { 
  
   printLocal = conf.getUntrackedParameter<bool>("Verbosity",false);
   phase1_ = conf.getUntrackedParameter<bool>("phase1",false);
@@ -295,11 +284,8 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   tree->Branch( "jet_phi"           , &jet_phi );
   tree->Branch( "jet_mass"          , &jet_mass );
   tree->Branch( "jet_bTag"          , &jet_bTag );
-
-  //trying to implement deepCSV:
   tree->Branch( "jet_deepCSV_probb"  , &jet_deepCSV_probb );
   tree->Branch( "jet_deepCSV_probbb"  , &jet_deepCSV_probbb );
-  //end deepCSV
 
   tree->Branch( "nClusters_L1004", &nClusters_L1004 ); 
   tree->Branch( "nClusters_L1006", &nClusters_L1006 );
@@ -350,10 +336,8 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
 //    tree->Branch( "genParticle_decayvx_eta" , &genParticle_decayvx_eta );
 //    tree->Branch( "genParticle_decayvx_phi" , &genParticle_decayvx_phi );
 //    tree->Branch( "genParticle_decayvx_r"   , &genParticle_decayvx_r   );
-    //for Zprime fraction
     tree->Branch( "genParticle_motherID" , &genParticle_motherID );
     tree->Branch( "jet_BMotherID"	 , &jet_BMotherID	);
-    //end Zprime fraction
     
   }
   
@@ -378,16 +362,9 @@ HitAnalyzer::HitAnalyzer(const edm::ParameterSet& conf)
   trackToken     = consumes<reco::TrackCollection               > (edm::InputTag(labelTracks));
   HLTtriggersToken=consumes<edm::TriggerResults	    		> (HLTtriggers_);
   METToken	 = consumes<reco::PFMETCollection		> (edm::InputTag(labelMET));
-
-  //trying to implement filters
-  //std::string HCALlaserNoiseFilter_Selector_ = "Flag_hcalLaserEventFilter";
-  //end filters
-
-  //trying to implement deepCSV
-  //std::string labelDeepCSV("pfDeepCSVJetTags");//, "probb", "RECO");
   deepCSVToken_probb  = consumes<reco::JetTagCollection		> (edm::InputTag("pfDeepCSVJetTags", "probb", "RECO"));
   deepCSVToken_probbb  = consumes<reco::JetTagCollection	> (edm::InputTag("pfDeepCSVJetTags", "probbb", "RECO"));
-  //end deepCSV
+
 }
 
 
@@ -438,18 +415,10 @@ void
   Handle<edm::TriggerResults		      > HLTtriggers; iEvent.getByToken(HLTtriggersToken, HLTtriggers);
   Handle<reco::PFMETCollection		      > METs	 ; iEvent.getByToken( METToken	   , METs     );
   const reco::JetTagCollection & bTags = *(CSVs.product()); 
-
-  //trying to implement filters:
-  //event.getByToken(noiseFilterToken_, noiseFilterBits_);
-  //const edm::TriggerNames &names = event.triggerNames(*noiseFilterBits_);
-  //end filters
-
-  //trying to implement deepCSV:
   Handle<reco::JetTagCollection               > deepCSVs_probb     ; iEvent.getByToken( deepCSVToken_probb, deepCSVs_probb );
   const reco::JetTagCollection & deepbTags_probb = *(deepCSVs_probb.product());
   Handle<reco::JetTagCollection               > deepCSVs_probbb     ; iEvent.getByToken( deepCSVToken_probbb, deepCSVs_probbb );
   const reco::JetTagCollection & deepbTags_probbb = *(deepCSVs_probbb.product());
-  //end deepCSV
 
   // to print all available HLTs:
   //const edm::TriggerNames& trigNames = iEvent.triggerNames(*HLTtriggers);
@@ -514,8 +483,6 @@ void
     TLorentzVector selectedGenP ;
     for ( reco::GenParticleCollection::const_iterator gp = genPs->begin(); gp != genPs->end(); ++gp ) {
         if (gp->status() != 23 && gp->status() !=2) continue;
-        //if (fabs(gp->pdgId()) == 5 || (!(fabs(gp->pdgId()) > 500 && fabs(gp->pdgId())<600) && !(fabs(gp->pdgId()) > 5000 && fabs(gp->pdgId())<6000))) continue;
-        //if (gp->pt() < 350) continue;	
 	if (gp->status() == 23 && fabs(gp->pdgId()) == 5) continue;
 	if (gp->status() == 2 && !(fabs(gp->pdgId()) > 500 && fabs(gp->pdgId())<600) && !(fabs(gp->pdgId()) > 5000 && fabs(gp->pdgId())<6000)) continue;
         TLorentzVector genP;
@@ -540,9 +507,9 @@ void
         genParticle_vx_eta .push_back(vx_eta );
         genParticle_vx_phi .push_back(vx_phi );
         genParticle_vx_r   .push_back(vx_r   );
-	//for Zprime fraction
+
 	if (gp->status() == 2) genParticle_motherID.push_back(findMother(findMother(gp))->pdgId());
-	//end Zprime fraction
+
     }
     nGenParticles = genParticle_pt.size();
   }
@@ -717,21 +684,16 @@ void
     //true MC btag
     if (isMC_){
       int true_bTag = -10;
-      //Zprime fraction
       int bJet_mother = 0;
-      //end Zprime fraction
+
       for (int p=0; p != nGenParticles ; ++p){
-        //if (!(fabs(genParticle_pdgId[p])>500 && fabs(genParticle_pdgId[p])<600) && !(fabs(genParticle_pdgId[p])>5000 && fabs(genParticle_pdgId[p])<6000)) continue;
-        //if (genParticle_status[p] != 2) continue;
 	if (genParticle_pt[p] < 350) continue;
 	if (genParticle_status[p] == 2){
           TLorentzVector pvector;
           pvector.SetPtEtaPhiM(genParticle_pt[p],genParticle_eta[p],genParticle_phi[p],genParticle_mass[p]);
           if (TVjet.DeltaR(pvector) < 0.3){
             true_bTag = 1;
-	    //checking Zprime fraction
 	    bJet_mother = genParticle_motherID[p];
-	    //end Zprime fraction
             break;
           }
 	}
@@ -745,16 +707,13 @@ void
 	}
       }
     jet_MC_bTag.push_back(true_bTag);
-    //Zprime fraction
     jet_BMotherID.push_back(bJet_mother);
-    //end Zprime fraction
     }
 
     // CSV b-tag infos
     double match = 0.4;
     double csv2 = -99.;
     for (unsigned int i = 0; i != bTags.size(); ++i) {
-      //if (bTags[i].first->pt()<170.) continue; //this sets all values in current sample to -99
       TLorentzVector bTagJet;
       bTagJet.SetPtEtaPhiM(bTags[i].first->pt(),bTags[i].first->eta(),bTags[i].first->phi(),bTags[i].first->mass());
       float dR = TVjet.DeltaR(bTagJet);
@@ -764,7 +723,6 @@ void
     }
     jet_bTag.push_back(csv2);
 
-    // trying to implement deepCSV
     double deepmatch = 0.4;
     double deepcsv_probb = -99.;
     double deepcsv_probbb = -99.;
@@ -779,7 +737,6 @@ void
     }
     jet_deepCSV_probb.push_back(deepcsv_probb);
     jet_deepCSV_probbb.push_back(deepcsv_probbb);
-    //end deepCSV
 
   }
 
@@ -805,11 +762,8 @@ void HitAnalyzer::reset( void ){
   jet_mass.clear();
   jet_pdgId.clear();
   jet_bTag.clear();
-
-  //trying to implement deepCSV:
   jet_deepCSV_probb.clear();
   jet_deepCSV_probbb.clear();
-  //end deepCSV
   
   jet_MC_bTag.clear();
 
@@ -859,10 +813,8 @@ void HitAnalyzer::reset( void ){
   genParticle_decayvx_eta.clear(); 
   genParticle_decayvx_phi.clear(); 
   genParticle_decayvx_r  .clear();
-  //for Zprime fraction
   genParticle_motherID.clear();
   jet_BMotherID.clear();
-  //end Zprime fraction 
   
   nClusters.clear();
   cluster_sizex.clear();
@@ -889,7 +841,6 @@ void HitAnalyzer::reset( void ){
 }
 
 // Find mother
-//for Zprime fraction
 const reco::GenParticle *HitAnalyzer::findMother(std::vector<reco::GenParticle>::const_iterator& particle) {
     const reco::GenParticle *tmp = &(*particle);
     int pdgId = particle->pdgId();
@@ -902,7 +853,7 @@ const reco::GenParticle *HitAnalyzer::findMother(std::vector<reco::GenParticle>:
       }
       return 0;
     }
-//end Zprime fraction
+
 const reco::GenParticle *HitAnalyzer::findMother(const reco::GenParticle *particle) {
       const reco::GenParticle *tmp = particle;
       int pdgId = particle->pdgId();
