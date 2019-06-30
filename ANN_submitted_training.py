@@ -5,7 +5,7 @@ import ROOT as rt
 
 def submitJobs(jobname, jobflavour, nEpochs, title, data_path):
     path = os.getcwd()
-    os.makedirs("ANN/"+title)
+    os.makedirs("/afs/cern.ch/work/m/msommerh/public/ANN_models/"+title)
     workdir = "tmp"+jobname
     os.makedirs(workdir)
     os.chdir(workdir)
@@ -57,7 +57,7 @@ def makeSubmitFileCondor(exe, jobname, jobflavour):
 
 if __name__ == "__main__":
  
-  jobname = "ANN_training_lessFilter2_medium"
+  jobname = "ANN_training_updated_ptcut_ZPrime-matching_quitelong"
 
   ##choose priority
   #jobflavour = 'espresso' #max 30min
@@ -67,9 +67,9 @@ if __name__ == "__main__":
   #jobflavour = 'tomorrow' #max 1d
   jobflavour = 'testmatch' #max 3d
 
-  nEpochs = 160
-  title = "lessFilter2_medium"
-  data_path = "ANN_data/lessFilter2"
+  nEpochs = 200
+  title = "updated_ptcut_ZPrime-matching_quitelong"
+  data_path = "/afs/cern.ch/work/m/msommerh/public/ANN_data/updated_ptcut_ZPrime-matching"
   submitJobs(jobname, jobflavour, nEpochs, title, data_path)
  
   print

@@ -38,14 +38,17 @@ def Predict_from_best_model(nClusters, pt, model):
 	X = ANN_functional_shape(nClusters)
         X.append(pT)
 	return model.predict(X).item()
+	#return model.predict(X[0]).item()
 
-def Create_datasets(title, signal_files, bg_files):
+def Create_datasets(title, signal_files, bg_files, pT_cut=None, ZPrime_matching=False):
+	import os
+	os.makedirs("/afs/cern.ch/work/m/msommerh/public/ANN_data/"+title)
 	signal_X = np.ndarray((0,23), dtype=np.float64)
 	for file_path in signal_files:
-		signal_X = np.vstack((signal_X, Extract_Data_From_File(file_path, y=1)))
+		signal_X = np.vstack((signal_X, Extract_Data_From_File(file_path, y=1, pT_cut=pT_cut, ZPrime_matching=ZPrime_matching)))
 	bg_X = np.ndarray((0,23), dtype=np.float64)
 	for file_path in bg_files:
-		bg_X = np.vstack((bg_X, Extract_Data_From_File(file_path, y=0)))
+		bg_X = np.vstack((bg_X, Extract_Data_From_File(file_path, y=0, pT_cut=pT_cut)))
 
 	np.random.shuffle(signal_X)
 	np.random.shuffle(bg_X)
@@ -64,16 +67,16 @@ def Create_datasets(title, signal_files, bg_files):
 	m = full_X.shape[0]
 	r = int(0.2*m)
 
-	np.save("ANN_data/{}/test_x.npy".format(title), full_X[:r,:20])
-        np.save("ANN_data/{}/test_y.npy".format(title), full_X[:r,22].astype(int))
-        np.save("ANN_data/{}/test_CSV.npy".format(title), full_X[:r,21])
-        np.save("ANN_data/{}/test_pT.npy".format(title), full_X[:r,20])
-        np.save("ANN_data/{}/train_x.npy".format(title), full_X[r:,:20])
-        np.save("ANN_data/{}/train_y.npy".format(title), full_X[r:,22].astype(int))
-        np.save("ANN_data/{}/train_pT.npy".format(title), full_X[r:,20])
-	print "Saved data as ANN_data/{}/*_*.npy.".format(title)
+	np.save("/afs/cern.ch/work/m/msommerh/public/ANN_data/{}/test_x.npy".format(title), full_X[:r,:20])
+        np.save("/afs/cern.ch/work/m/msommerh/public/ANN_data/{}/test_y.npy".format(title), full_X[:r,22].astype(int))
+        np.save("/afs/cern.ch/work/m/msommerh/public/ANN_data/{}/test_CSV.npy".format(title), full_X[:r,21])
+        np.save("/afs/cern.ch/work/m/msommerh/public/ANN_data/{}/test_pT.npy".format(title), full_X[:r,20])
+        np.save("/afs/cern.ch/work/m/msommerh/public/ANN_data/{}/train_x.npy".format(title), full_X[r:,:20])
+        np.save("/afs/cern.ch/work/m/msommerh/public/ANN_data/{}/train_y.npy".format(title), full_X[r:,22].astype(int))
+        np.save("/afs/cern.ch/work/m/msommerh/public/ANN_data/{}/train_pT.npy".format(title), full_X[r:,20])
+	print "Saved data as /afs/cern.ch/work/m/msommerh/public/ANN_data/{}/*_*.npy.".format(title)
 
-def Extract_Data_From_File(input_file, y=1):
+def Extract_Data_From_File(input_file, y=1, pT_cut=None, ZPrime_matching=False):
 	X = np.ndarray((0,23), dtype=np.float64)
 	print "opening",input_file
 	f1 = rt.TFile.Open(input_file, "READ")
@@ -89,6 +92,9 @@ def Extract_Data_From_File(input_file, y=1):
                 for j in xrange(tree.nJets):
 			if y==1 and tree.jet_MC_bTag[j] != 1: continue
 			if y==0 and tree.jet_MC_bTag[j] != 0: continue
+			if pT_cut != None:
+				if tree.jet_pt[j] > pT_cut: continue
+			if ZPrime_matching and abs(tree.jet_BMotherID[j])!=32: continue
                         _X = np.array([tree.nClusters_L1004[j],tree.nClusters_L1006[j],tree.nClusters_L1008[j],tree.nClusters_L1010[j],tree.nClusters_L1016[j],tree.nClusters_L2004[j],tree.nClusters_L2006[j],tree.nClusters_L2008[j],tree.nClusters_L2010[j],tree.nClusters_L2016[j],tree.nClusters_L3004[j],tree.nClusters_L3006[j],tree.nClusters_L3008[j],tree.nClusters_L3010[j],tree.nClusters_L3016[j],tree.nClusters_L4004[j],tree.nClusters_L4006[j],tree.nClusters_L4008[j],tree.nClusters_L4010[j],tree.nClusters_L4016[j], tree.jet_pt[j], tree.jet_bTag[j], y], dtype=np.float64)
 			X = np.vstack((X, _X))
 	return X
@@ -172,26 +178,26 @@ def find_weight_function(data_path, Numerator_pT, Denominator_pT, binsize):
 if __name__ == "__main__":
 
 	
-	signal_path = "/eos/user/m/msommerh/HitAnalyzer4_collected/{}/M{}/flatTuple_{}.root"
-	bg_path = "/eos/user/m/msommerh/HitAnalyzer4_collected/QCD/{}/flatTuple_{}.root"
+	signal_path = "/eos/user/m/msommerh/HitAnalyzer_updated_collected/{}/M{}/flatTuple_{}.root"
+	bg_path = "/eos/user/m/msommerh/HitAnalyzer_updated_collected/QCD/{}/flatTuple_{}.root"
 	
 	#M0_list = ['1000', '1200', '1400', '1600', '1800', '2000', '2500', '3000', '3500', '4000', '4500', '5000', '5500', '6000']
 	M0_list = ['2000', '2500', '3000', '3500', '4000', '4500', '5000', '5500', '6000']
 	bin_list = [('170','300'), ('300','470'), ('470','600'), ('600','800'), ('800','1000'), ('1000','1400'), ('1400','1800'), ('1800','2400'), ('2400','3200'), ('3200', 'Inf')]
 
-	signal_files = []
-	for M0 in M0_list:
-		for i in range(1,41):
-			signal_files.append(signal_path.format('2017',M0,i))
-			signal_files.append(signal_path.format('2018',M0,i))
-	bg_files = []
-	for bin_ in bin_list:
-		for i in range(1,61):
-			bg_files.append(bg_path.format(bin_[0]+"to"+bin_[1],i))
-	Create_datasets("lessFilter2", signal_files, bg_files)	
+	#signal_files = []
+	#for M0 in M0_list:
+	#	for i in range(1,41):
+	#		signal_files.append(signal_path.format('2017',M0,i))
+	#		signal_files.append(signal_path.format('2018',M0,i))
+	#bg_files = []
+	#for bin_ in bin_list:
+	#	for i in range(1,61):
+	#		bg_files.append(bg_path.format(bin_[0]+"to"+bin_[1],i))
+	#Create_datasets("updated_ptcut", signal_files, bg_files, pT_cut=2500, ZPrime_matching=False)	
 		
-	train_pT = np.load("ANN_data/lessFilter2/train_pT.npy")
-	train_y = np.load("ANN_data/lessFilter2/train_y.npy")
+	train_pT = np.load("/afs/cern.ch/work/m/msommerh/public/ANN_data/updated_ptcut/train_pT.npy")
+	train_y = np.load("/afs/cern.ch/work/m/msommerh/public/ANN_data/updated_ptcut/train_y.npy")
 
 	bg_pT = train_pT[train_y==0]
 	signal_pT = train_pT[train_y==1]
@@ -200,5 +206,14 @@ if __name__ == "__main__":
 	print "train_pT =",train_pT[:40]
 	print "train_y =",train_y[:40]
 
-	find_weight_function("ANN_data/lessFilter2", bg_pT, signal_pT, 10)
+	print "bg_pt_max =", bg_pT.max()
+	print "signal_pt_max =",signal_pT.max()
+
+	#import matplotlib.pyplot as plt
+	#plt.figure()
+	#plt.hist(bg_pT, bins=100)
+	#plt.hist(signal_pT, bins=100)
+	#plt.show()
+
+	find_weight_function("/afs/cern.ch/work/m/msommerh/public/ANN_data/updated_ptcut", bg_pT, signal_pT, 10)
 	

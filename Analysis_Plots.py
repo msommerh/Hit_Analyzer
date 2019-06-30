@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #import keras as kr
-
-from ANN_support import ANN_functional_shape
+#from ANN_support import ANN_functional_shape
 
 def ANN_bin_selection(pT,bins):
         """numpy array version of the bin_selection() function: takes an array of all pT values and the
@@ -270,7 +269,7 @@ def Relative_Gain_Plots(input_file, signal_title, pT_range):
         plt.figure()
         plt.errorbar(thresholds, ANN_withPT_gains, yerr=ANN_withPT_errors, fmt='magenta', label=r"MANtag")
         plt.xlim(pT_range[0],pT_range[1])
-        plt.ylim(0,3.5)
+        plt.ylim(0,2.0)
         plt.xlabel(r"jet $p_T$ threshold (GeV)")
         plt.ylabel(r"gain")
         plt.legend(loc=2)
@@ -355,7 +354,7 @@ def AnalysisStep2_GeneratePlots(cut_bins, signal_data, bg_data, MANtag_cuts, CSV
 
 	Relative_Gain_Plots("exclusive_tagged_histograms/signal_large_tagged_jets_vs_pT_exclusive.root", "signal_large", (200,3000))	
 
-	Efficiency_vs_pT("signal_large",[(signal_ANN_hist, "MANtag", 3), (signal_CSV_hist, "CSV", 4)], signal_AllJets_hist,1,BG=False)
+	Efficiency_vs_pT("signal_large",[(signal_ANN_hist, "MANtag", 3), (signal_CSV_hist, "CSV", 4)], signal_AllJets_hist,0.7,BG=False)
 	Efficiency_vs_pT("BG_large",[(BG_ANN_hist, "MANtag", 3), (BG_CSV_hist, "CSV", 4)], BG_AllJets_hist,0.3,BG=True)
 
 
@@ -366,8 +365,8 @@ if __name__ == "__main__":
 	#model_path = "ANN/test/model_large.h5"
 	#from AddMANtag_list import AddMANtag_to_dataset(model_path)
 	
-	signal_path = "/afs/cern.ch/work/m/msommerh/public/HitAnalyzer2/{}/M{}/flatTuple_{}.root"
-        bg_path = "/afs/cern.ch/work/m/msommerh/public/HitAnalyzer2/QCD/{}/flatTuple_{}.root"
+	signal_path = "/afs/cern.ch/work/m/msommerh/public/HitAnalyzer_check2/{}/M{}/flatTuple_{}.root"
+        bg_path = "/afs/cern.ch/work/m/msommerh/public/HitAnalyzer_check2/QCD/{}/flatTuple_{}.root"
 
         M0_list = ['1000', '1200', '1400', '1600', '1800', '2000', '2500', '3000', '3500', '4000', '4500', '5000', '5500', '6000']
         bin_list = [('170','300'), ('300','470'), ('470','600'), ('600','800'), ('800','1000'), ('1000','1400'), ('1400','1800'), ('1800','2400'), ('2400','3200'), ('3200', 'Inf')]
@@ -392,10 +391,44 @@ if __name__ == "__main__":
 	
 	signal_data, bg_data = AnalysisStep0_LoadData(signal_files, bg_files)
 
-	MANtag_cuts, CSV_cuts = AnalysisStep1_DeriveCuts(cut_bins, bg_data)
+	#test_pt = np.load("ANN_data/lessFilter2/train_pT.npy")
+	##test_csv = np.load("ANN_data/lessFilter2/train_CSV.npy")
+	#test_csv =np.zeros(test_pt.size) 
+	#test_x = np.load("ANN_data/lessFilter2/train_x.npy")
+	#test_y = np.load("ANN_data/lessFilter2/train_y.npy")
+	#signal_pt = test_pt[test_y.astype(bool)]
+	#signal_csv = test_csv[test_y.astype(bool)]
+	#signal_x = test_x[test_y.astype(bool)]
+	#bg_pt = test_pt[np.logical_not(test_y)]
+	#bg_csv = test_csv[np.logical_not(test_y)]
+	#bg_x = test_x[np.logical_not(test_y)]
 
-	#MANtag_cuts = [0.7166666666666667, 0.7166666666666667, 0.7166666666666667, 0.7166666666666667, 0.7166666666666667, 0.7166666666666667, 0.7166666666666667, 0.7166666666666667, 0.7166666666666667, 0.7, 0.6833333333333333, 0.6166666666666667, 0.6166666666666667, 0.55, 0.5, 0.3833333333333333]
-	#CSV_cuts = [0.5333333333333333, 0.6, 0.6333333333333333, 0.65, 0.65, 0.6333333333333333, 0.6833333333333333, 0.7333333333333333, 0.7666666666666666, 0.75, 0.75, 0.7833333333333333, 0.7833333333333333, 0.7666666666666666, 0.7333333333333333, 0.75]
+	#import keras as kr
+	#from ANN_support import Predict_from_best_model
+
+	#model = kr.models.load_model("ANN/lessFilter2_nohup/model.h5")
+	#print "signal size =",signal_pt.size
+        #print "bg_size =",bg_pt.size
+
+	#signal_MANtag = np.zeros(signal_pt.size)
+	#for n in xrange(signal_pt.size):
+	#	NC = signal_x[n,:].astype(np.int32)
+	#	signal_MANtag[n] = Predict_from_best_model(NC, signal_pt[n], model)
+
+	#bg_MANtag = np.zeros(bg_pt.size)
+	#for n in xrange(bg_pt.size):
+	#	NC = bg_x[n,:].astype(np.int32)
+	#	bg_MANtag[n] = Predict_from_best_model(NC, bg_pt[n], model)
+
+	#np.save("ANN/lessFilter2_nohup/signal_MANtag_train.npy", signal_MANtag)
+	#np.save("ANN/lessFilter2_nohup/bg_MANtag_train.npy", bg_MANtag)	
+	#
+	##signal_MANtag = np.load("ANN/lessFilter_verylong/signal_MANtag.npy")
+	##bg_MANtag = np.load("ANN/lessFilter_verylong/bg_MANtag.npy")
+	#signal_data = (signal_MANtag, signal_pt, signal_csv)
+	#bg_data = (bg_MANtag, bg_pt, bg_csv)
+
+	MANtag_cuts, CSV_cuts = AnalysisStep1_DeriveCuts(cut_bins, bg_data)
 
 	AnalysisStep2_GeneratePlots(cut_bins, signal_data, bg_data, MANtag_cuts, CSV_cuts)
 

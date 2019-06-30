@@ -15,7 +15,7 @@ def AddMANtag(model, input_file, output_file):
 		f1 = rt.TFile.Open(input_file, "UPDATE")
 	tree = f1.Get("demo/tree")
 	
-	maxnJ = 150 
+	maxnJ = 5000 
 	
 	_MANtag = np.zeros(maxnJ, dtype=np.double)
 	
